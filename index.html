@@ -95,6 +95,21 @@ pre{background:#0f1824;border:1px solid var(--line);border-radius:6px;padding:10
       <span>Faded dashed = already mitigated</span>
     </div>
     <div class="note">Drag to pan, pinch or +/− to zoom, tap a candle for values. Scroll the page by dragging vertically. Axis time is your local time.</div>
+      <div class="card" style="margin-top:14px;padding:10px;background:#101b29">
+      <h2>Live multi-market chart · TradingView</h2>
+      <label for="tvSymbol">Choose market</label>
+      <select id="tvSymbol">
+        <optgroup label="Metals"><option value="OANDA:XAUUSD">Gold · XAUUSD</option><option value="OANDA:XAGUSD">Silver · XAGUSD</option></optgroup>
+        <optgroup label="Forex"><option value="OANDA:EURUSD">EUR/USD</option><option value="OANDA:GBPUSD">GBP/USD</option><option value="OANDA:USDJPY">USD/JPY</option><option value="OANDA:USDCHF">USD/CHF</option><option value="OANDA:AUDUSD">AUD/USD</option><option value="OANDA:USDCAD">USD/CAD</option></optgroup>
+        <optgroup label="Crypto"><option value="BINANCE:BTCUSDT">Bitcoin · BTC/USDT</option><option value="BINANCE:ETHUSDT">Ethereum · ETH/USDT</option><option value="BINANCE:SOLUSDT">Solana · SOL/USDT</option><option value="BINANCE:BNBUSDT">BNB · BNB/USDT</option></optgroup>
+        <optgroup label="Indices"><option value="FOREXCOM:SPXUSD">S&amp;P 500</option><option value="NASDAQ:NDX">Nasdaq 100</option><option value="TVC:DJI">Dow Jones</option></optgroup>
+      </select>
+      <div class="row" id="tvFrames" style="margin-top:8px">
+        <button class="chip" data-tv="5" aria-pressed="false">5m</button><button class="chip" data-tv="15" aria-pressed="true">15m</button><button class="chip" data-tv="60" aria-pressed="false">1h</button><button class="chip" data-tv="240" aria-pressed="false">4h</button><button class="chip" data-tv="D" aria-pressed="false">1D</button><button class="chip" data-tv="W" aria-pressed="false">1W</button>
+      </div>
+      <iframe id="tvFrame" title="TradingView live market chart" style="width:100%;height:430px;border:0;border-radius:6px;background:#0f1824" loading="lazy" allowfullscreen referrerpolicy="origin"></iframe>
+      <p class="note">TradingView chart is a separate live chart display. The rule-based BUY/SELL engine above analyzes only the selected candle-data feed; it cannot read candles from this embedded chart. Verify symbol, exchange, quote delay and broker price before trading.</p>
+    </div>
   </section>
 
   <section id="rsic" class="card">
@@ -345,6 +360,20 @@ document.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{cfg.tf=b.datase
 buildSel();$('#cu').value=cfg.url;$('#cs').value=cfg.sym;$('#ch').value=cfg.hk;$('#cv2').value=cfg.hv;
 $('#fs').onchange=e=>{cfg.feed=e.target.value;store.set('cfg',cfg);if(cfg.feed==='custom')$('#cdet').open=true;V.set=0;load()};
 $('#save').onclick=()=>{Object.assign(cfg,{url:$('#cu').value.trim(),sym:$('#cs').value.trim()||'XAUUSD',hk:$('#ch').value.trim(),hv:$('#cv2').value,feed:'custom'});store.set('cfg',cfg);$('#fs').value='custom';V.set=0;load()};
+/* TradingView multi-market chart (visual display; not the AI data feed) */
+let tvInterval='15';
+function tvLoad(){
+  const symbol=$('#tvSymbol').value;
+  const params=new URLSearchParams({symbol,interval:tvInterval,theme:'dark',style:'1',locale:'en',toolbar_bg:'#0d1520',enable_publishing:'false',hide_top_toolbar:'false',hide_legend:'false',saveimage:'false',container_id:'tv_embed'});
+  $('#tvFrame').src='https://www.tradingview.com/widgetembed/?'+params.toString();
+}
+$('#tvSymbol').onchange=tvLoad;
+document.querySelectorAll('[data-tv]').forEach(b=>b.onclick=()=>{
+  tvInterval=b.dataset.tv;
+  document.querySelectorAll('[data-tv]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  tvLoad();
+});
+tvLoad();
 /* PWA */
 let dp=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#inst').hidden=false});
 $('#inst').onclick=async()=>{if(dp){dp.prompt();await dp.userChoice;dp=null;$('#inst').hidden=true}};
