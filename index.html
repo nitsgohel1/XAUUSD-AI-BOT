@@ -288,7 +288,7 @@ function decide(A,C,st){
 /* ---- State, loading ---------------------------------------------------- */
 let S=null,D={C:[],A:null,nc:0},seq=0,sel=-1;const V={s:0,n:80,set:0};const ly={bos:1,fvg:1,ob:1,sw:1};
 async function load(){
-  const my=++seq,tf=cfg.tf,order=cfg.feed==='custom'?['custom']:[cfg.feed,...Object.keys(FEEDS).filter(k=>k!==cfg.feed&&FEEDS[k].proxy)].filter(k=>FEEDS[k]),errs=[];
+  const my=++seq,tf=cfg.tf,order=cfg.feed==='custom'?['custom']:cfg.feed==='auto'?['auto']:[cfg.feed,...Object.keys(FEEDS).filter(k=>k!==cfg.feed&&FEEDS[k].proxy)].filter(k=>FEEDS[k]),errs=[];
   for(const k of order){const f=FEEDS[k];
     try{const c=clean(await getCandles(f,tf,300));if(c.length<30)throw Error('only '+c.length+' valid candles');
       if(my!==seq)return;S={candles:c,id:k,f,at:Date.now(),cached:false,errs,tf};store.set('c:'+k+':'+tf,{c:c.slice(-300),at:S.at});return after()}
@@ -316,7 +316,7 @@ function renderTop(){
   const st=status(),f=S&&S.f,C=D.C;
   const pl=$('#pill');pl.textContent={live:'LIVE',stale:'STALE',cached:'CACHED',none:'NO DATA'}[st.k];pl.className='pill '+{live:'up',stale:'warn',cached:'warn',none:'dn'}[st.k];
   $('#ban').innerHTML=!f?'<b>No data source connected.</b> Nothing is shown until a real feed responds.'
-    :f.proxy?'<b>Proxy data, not XAUUSD.</b> PAXG/USDT is a gold-backed token priced in USDT. It trades 24/7 and differs from broker XAUUSD in price, spread and session hours. Check your broker’s own XAUUSD quote before acting on any level.'
+    :f.proxy?'<b>Reference feed, not broker spot price.</b> '+(cfg.market==='XAUUSD'?'The public feed uses COMEX Gold futures (GC=F), not broker XAUUSD spot. Futures price, sessions and spread can differ.':cfg.market==='XAGUSD'?'The public feed uses Silver futures (SI=F), not broker spot silver. Futures price and sessions can differ.':'This is a proxy instrument, not the exact broker contract.')+' Verify your broker quote before using any level.'
     :'<b>User-supplied feed labelled “'+esc(f.sym)+'”.</b> This app cannot verify the provider or that it matches your broker. Confirm before acting on any level.';
   $('#plab').textContent=f?`${f.sym}${f.proxy?' · PROXY for XAUUSD':''} · ${f.name}${S.cached?' · cached':''}`:'No source';
   if(C.length){const l=C[C.length-1],pc=C.length>1?C[C.length-2].c:l.o,d=l.c-pc;$('#price').textContent=p2(l.c);
@@ -331,7 +331,7 @@ function renderTop(){
   if(R!=null){$('#rv').textContent=R.toFixed(1);$('#rv').className='big '+(R>=70?'dn':R<=30?'up':'');
     $('#rs').textContent=R>=70?'Overbought (above 70)':R<=30?'Oversold (below 30)':R>=50?'Neutral, above the 50 midline':'Neutral, below the 50 midline';
     const g=$('#gm');g.hidden=false;g.style.left=R+'%'}else{$('#rv').textContent='—';$('#rs').textContent='Needs at least 15 closed candles';$('#gm').hidden=true}
-  const rows=[['Source',f?`${f.name} (${f.host})`:'—'],['Instrument',f?`${f.sym} ${f.proxy?'— proxy, not XAUUSD':'— user-supplied, unverified'}`:'—'],['Timeframe',cfg.tf]];
+  const rows=[['Source',f?`${f.name} (${f.host})`:'—'],['Instrument',f?`${f.sym} ${f.proxy?'— reference/proxy; verify contract':'— public or user-supplied feed'}`:'—'],['Timeframe',cfg.tf]];
   if(C.length){const l=C[C.length-1];rows.push(['Latest candle open',`${utc(l.t)} (${loc(l.t)} local)`],['Fetched',`${new Date(S.at).toLocaleString([],{hour12:false})} · ${fa((Date.now()-S.at)/1000)} ago${S.cached?' (cached)':''}`],['Candles',`${C.length} (${D.nc} closed)`])}
   rows.push(['Data state',{live:'Live, refreshes every 30s',stale:'Stale',cached:'Cached copy, not live',none:'No data'}[st.k]]);
   $('#src').innerHTML=rows.map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join('');
