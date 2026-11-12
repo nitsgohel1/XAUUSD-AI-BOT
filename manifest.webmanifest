@@ -1,0 +1,20 @@
+{
+  "id": "/XAUUSD-AI-BOT/",
+  "name": "XAUUSD AI Bot",
+  "short_name": "Gold AI",
+  "description": "XAUUSD chart, conditional signals and risk calculator",
+  "start_url": "/XAUUSD-AI-BOT/",
+  "scope": "/XAUUSD-AI-BOT/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1624",
+  "theme_color": "#0d1624",
+  "icons": [
+    {
+      "src": "/XAUUSD-AI-BOT/icon.svg",
+      "sizes": "192x192 512x512 any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
