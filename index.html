@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<link rel="manifest" href="/XAUUSD-AI-BOT/manifest.webmanifest">\n<link rel="icon" href="/XAUUSD-AI-BOT/icon.svg" type="image/svg+xml">\n<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-title" content="Gold AI">
 <meta name="theme-color" content="#0d1624">
 <title>XAUUSD AI Bot</title>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
@@ -216,5 +216,5 @@ $('tfs').innerHTML=Object.keys(TFS).map(k=>'<button data-k="'+k+'"'+(k==tf?' cla
 $('tfs').onclick=e=>{const k=e.target.dataset.k;if(!k)return;tf=k;[...$('tfs').children].forEach(b=>b.classList.toggle('on',b.dataset.k==k));load()};
 load();
 </script>
-</body>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/XAUUSD-AI-BOT/sw.js").catch(console.error));}</script>\n</body>
 </html>
