@@ -24,7 +24,7 @@ export default {
     const tf = url.searchParams.get("tf") || "15m";
     if (!ALLOWED_TF.has(tf)) return json({ error: "Unsupported timeframe", allowed: [...ALLOWED_TF] }, 400);
     const limit = Math.max(30, Math.min(500, Number.parseInt(url.searchParams.get("limit") || "300", 10) || 300));
-    const interval = tf === "4h" ? "60m" : tf;
+    const interval = (tf === "4h" || tf === "1h") ? "60m" : tf;
     const seconds = tf === "5m" ? 300 : tf === "15m" ? 900 : tf === "1h" ? 3600 : 14400;
     const end = Math.floor(Date.now() / 1000);
     const start = end - Math.ceil(seconds * limit * 1.8);
@@ -50,7 +50,7 @@ export default {
 
       let candles = result.timestamp.map((t, i) => {
         const values = [t, q.open?.[i], q.high?.[i], q.low?.[i], q.close?.[i], q.volume?.[i] || 0];
-        return values.slice(0, 5).every(v => Number.isFinite(Number(v))) && Number(q.high[i]) >= Number(q.low[i])
+        return values.slice(0, 5).every(v => v !== null && v !== undefined && Number.isFinite(Number(v))) && Number(q.high[i]) >= Number(q.low[i])
           ? [Number(t), Number(q.open[i]), Number(q.high[i]), Number(q.low[i]), Number(q.close[i]), Number(q.volume?.[i] || 0)]
           : null;
       }).filter(Boolean);
