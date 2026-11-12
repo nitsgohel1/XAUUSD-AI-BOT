@@ -159,7 +159,7 @@ const cfg=Object.assign({feed:'auto',market:'XAUUSD',tf:'15m',url:'',sym:'XAUUSD
 if(!TF[cfg.tf])cfg.tf='15m';
 // Migrate older installs away from the legacy PAXG proxy feed. Never analyze PAXG as XAUUSD.
 if(cfg.feed==='binance'||cfg.feed==='bybit'){cfg.feed='auto';store.set('cfg',cfg);}
-if(!MARKETS[cfg.market]){cfg.market='XAUUSD';store.set('cfg',cfg);}
+
 const num=v=>{const x=typeof v==='string'?parseFloat(v):v;return Number.isFinite(x)?x:null};
 function mk(t,o,h,l,c,v){t=num(t);o=num(o);h=num(h);l=num(l);c=num(c);return[t,o,h,l,c].some(x=>x===null)||h<l?null:{t,o,h,l,c,v:num(v)||0}}
 const clean=a=>{const m=new Map();a.filter(Boolean).forEach(x=>m.set(x.t,x));return[...m.values()].sort((a,b)=>a.t-b.t)};
@@ -190,6 +190,7 @@ const MARKETS={
   'NDX':{label:'Nasdaq 100 index',symbol:'^NDX',tv:'NASDAQ:NDX',kind:'yahoo'},
   'DJI':{label:'Dow Jones index',symbol:'^DJI',tv:'TVC:DJI',kind:'yahoo'}
 };
+if(!MARKETS[cfg.market]){cfg.market='XAUUSD';store.set('cfg',cfg);}
 const market=()=>MARKETS[cfg.market]||MARKETS.XAUUSD;
 const FEEDS={
   auto:{name:'Free public feeds (auto)',get sym(){return market().label},get host(){return market().kind==='binance'?'data-api.binance.vision':'query1.finance.yahoo.com'},get proxy(){return !!market().proxy},
