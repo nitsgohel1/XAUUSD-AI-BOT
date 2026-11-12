@@ -1,4 +1,4 @@
-const V='xau-v2',SHELL=['./','index.html','manifest.webmanifest','icon-192.png'];
+const V='xau-v3',SHELL=['./','index.html','manifest.webmanifest','icon-192.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(SHELL)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))));self.clients.claim()});
 // Same-origin app files only: network first, cache fallback. Market-data APIs are never cached here.
