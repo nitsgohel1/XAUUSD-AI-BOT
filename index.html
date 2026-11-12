@@ -131,12 +131,13 @@ pre{background:#0f1824;border:1px solid var(--line);border-radius:6px;padding:10
     </select>
     <p class="note">Select an instrument to run the rules engine on its available candles. The app switches data providers automatically.</p>
     <label for="fs">Feed</label><select id="fs"></select>
-    <details id="cdet"><summary>Custom XAUUSD endpoint (broker or provider)</summary>
-      <label for="cu">URL template — use {tf} and {limit}</label><input id="cu" placeholder="https://example.com/api/candles?symbol=XAUUSD&tf={tf}&limit={limit}" inputmode="url">
+    <details id="cdet"><summary>Custom XAUUSD endpoint (Cloudflare Worker)</summary>
+      <p class="note">Free read-only setup: deploy the repository file <code>cloudflare/worker.js</code> to Cloudflare Workers, then paste your Worker URL below. This source uses Yahoo GC=F COMEX gold futures as a reference, not the exact Octa XAUUSD spot quote.</p>
+      <label for="cu">URL template — use {tf} and {limit}</label><input id="cu" placeholder="https://YOUR-WORKER.workers.dev/?tf={tf}&limit={limit}" inputmode="url">
       <label for="cs">Symbol label shown in the app</label><input id="cs" placeholder="XAUUSD">
       <label for="ch">Optional header name</label><input id="ch" placeholder="X-API-Key">
       <label for="cv2">Optional header value</label><input id="cv2" type="password" autocomplete="off">
-      <p class="note">Header values are stored in this browser only. Never put a broker trading key here — use a read-only market-data key or your own proxy. The endpoint must allow cross-origin (CORS) requests.</p>
+      <p class="note">Header values are stored in this browser only. Never put a broker trading key here — use a read-only market-data key or your own proxy. The endpoint must allow cross-origin (CORS) requests. The included Cloudflare Worker already enables CORS.</p>
       <button class="btn p" id="save" style="margin-top:6px">Save and load</button>
       <p class="note">Accepted JSON: an array, or an object with <code>candles</code>, <code>data</code>, <code>result</code> or <code>values</code>. Each candle is either <code>[time,open,high,low,close,volume]</code> or an object with those keys.</p>
       <pre>[{"time":1731412800,"open":2601.5,"high":2604.2,"low":2599.8,"close":2603.1,"volume":812}]</pre>
@@ -174,7 +175,7 @@ function normAny(j){
 /* ---- Feed adapter interface -------------------------------------------
    {name, sym, proxy:boolean, host, fetch?(tf,limit)->[{t,o,h,l,c,v}]  OR  url(tf,limit)+parse(json)} */
 const MARKETS={
-  'XAUUSD':{label:'Gold · XAUUSD spot reference',symbol:'GC=F',tv:'OANDA:XAUUSD',kind:'yahoo',proxy:true},
+  'XAUUSD':{label:'Gold · XAUUSD futures reference (GC=F)',symbol:'GC=F',tv:'OANDA:XAUUSD',kind:'yahoo',proxy:true},
   'XAGUSD':{label:'Silver · XAGUSD futures reference',symbol:'SI=F',tv:'OANDA:XAGUSD',kind:'yahoo',proxy:true},
   'EURUSD':{label:'EUR/USD',symbol:'EURUSD=X',tv:'OANDA:EURUSD',kind:'yahoo'},
   'GBPUSD':{label:'GBP/USD',symbol:'GBPUSD=X',tv:'OANDA:GBPUSD',kind:'yahoo'},
