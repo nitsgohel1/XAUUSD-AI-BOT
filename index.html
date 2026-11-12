@@ -1,220 +1,359 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<link rel="manifest" href="/XAUUSD-AI-BOT/manifest.webmanifest">\n<link rel="icon" href="/XAUUSD-AI-BOT/icon.svg" type="image/svg+xml">\n<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-title" content="Gold AI">
-<meta name="theme-color" content="#0d1624">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>XAUUSD AI Bot</title>
-<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<meta name="theme-color" content="#0d1520">
+<meta name="description" content="Smart-money structure monitor for gold with explicit data-source labelling.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
-:root{--bg:#0d1624;--cd:#15233a;--bd:#25364f;--tx:#e8edf5;--mu:#8da0bb;--au:#d9a441;--up:#2fbf8a;--dn:#e5574f}
-*{box-sizing:border-box}
-body{margin:0 auto;max-width:760px;padding:10px;background:var(--bg);color:var(--tx);font:14px system-ui,sans-serif;font-variant-numeric:tabular-nums}
-.top{display:flex;justify-content:space-between;align-items:flex-end}
-h1{font:700 19px Georgia,serif;margin:0;color:var(--au)}
-#px{font:700 28px Georgia,serif}
-.mu{color:var(--mu);font-size:12px}
-#tfs{display:flex;gap:6px;overflow-x:auto;margin:10px 0}
-button,select,input{font:inherit;color:var(--tx);background:var(--cd);border:1px solid var(--bd);border-radius:8px}
-#tfs button{padding:10px 14px;flex:none}
-#tfs button.on{background:var(--au);color:#1a1405;font-weight:700;border-color:var(--au)}
-#cw{position:relative;height:440px;border:1px solid var(--bd);border-radius:6px;overflow:hidden}
-#ch{position:absolute;inset:0}
-#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.card{background:var(--cd);border:1px solid var(--bd);border-radius:6px;padding:12px;margin-top:12px}
-.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.bd{padding:6px 18px;border-radius:6px;font-weight:800;font-size:20px;background:var(--bd)}
-.bd.BUY{background:var(--up);color:#04241a}.bd.SELL{background:var(--dn);color:#2a0805}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.g3 div{background:var(--bg);border-radius:6px;padding:8px;font-size:12px;color:var(--mu)}
-.g3 b{display:block;font-size:15px;color:var(--tx);margin-top:2px}
-ul{margin:10px 0 0;padding-left:18px;color:var(--mu);font-size:13px;line-height:1.5}
-label{display:block;font-size:12px;color:var(--mu)}
-input{width:100%;padding:10px;margin-top:3px}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
-#use{width:100%;margin-top:10px;padding:11px}
+:root{--bg:#0d1520;--panel:#142030;--line:#26364a;--ink:#e8edf3;--mut:#93a4b8;--gold:#d9a441;--up:#2fb59a;--dn:#e5624e;--warn:#f0b04a;--fvg:#5aa0ff;--ob:#b78cff;color-scheme:dark}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+header{max-width:1100px;margin:0 auto;padding:14px 12px 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font:600 1.55rem/1.1 Georgia,"Iowan Old Style",serif;margin:0;flex:1 1 auto;letter-spacing:.01em}
+h1 small{display:block;font:400 .8rem system-ui,sans-serif;color:var(--mut);margin-top:3px}
+h2{font:600 .95rem system-ui,sans-serif;margin:0 0 8px;color:var(--gold)}
+main{max-width:1100px;margin:0 auto;padding:8px 12px 28px;display:grid;gap:12px;grid-template-columns:minmax(0,1fr);grid-template-areas:"ban" "sig" "chart" "rsi" "src" "feed"}
+@media(min-width:900px){main{grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);grid-template-areas:"ban ban" "chart sig" "chart rsi" "chart src" "feed feed"}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
+#ban{grid-area:ban;border-left:4px solid var(--warn);font-size:.88rem}#ban b{color:var(--warn)}
+#sigc{grid-area:sig}#chartc{grid-area:chart}#rsic{grid-area:rsi}#srcc{grid-area:src}#feedc{grid-area:feed}
+.pill{font-size:.78rem;font-weight:700;padding:5px 11px;border-radius:14px;border:1px solid currentColor}
+.up{color:var(--up)}.dn{color:var(--dn)}.warn{color:var(--warn)}.mut{color:var(--mut)}
+.row{display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:2px 0 8px;-webkit-overflow-scrolling:touch}.row::-webkit-scrollbar{display:none}
+button,select,input{font:inherit;color:var(--ink)}
+.chip,.btn{min-height:40px;padding:0 14px;border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:20px;white-space:nowrap;cursor:pointer;flex:none}
+.chip[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:#1a1405;font-weight:600}
+.btn.p{background:var(--gold);color:#1a1405;border-color:var(--gold);font-weight:600}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#cw{height:clamp(340px,58vh,560px);margin-top:2px;border:1px solid var(--line);border-radius:6px;background:#0f1824}
+canvas{width:100%;height:100%;display:block;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+#ro{font-size:.8rem;color:var(--mut);min-height:2.6em;font-variant-numeric:tabular-nums}
+.lg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.78rem;color:var(--mut);margin-top:6px}.lg i{display:inline-block;width:12px;height:9px;margin-right:5px;border:1px solid;vertical-align:-1px}
+.big{font-size:2rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+#sig{font:700 2.1rem Georgia,serif;margin:6px 0 2px}
+ul.chk{list-style:none;margin:8px 0;padding:0;font-size:.86rem}ul.chk li{display:grid;grid-template-columns:20px 1fr;gap:4px;padding:3px 0}
+dl{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:0;font-size:.84rem}dt{color:var(--mut)}dd{margin:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.gauge{position:relative;height:12px;border-radius:6px;margin:14px 0 22px;background:linear-gradient(90deg,#2fb59a55 0 30%,#26364a 30% 70%,#e5624e55 70%)}
+.gauge span{position:absolute;top:14px;font-size:.72rem;color:var(--mut);transform:translateX(-50%)}
+.gauge i{position:absolute;top:-4px;width:4px;height:20px;background:var(--ink);border-radius:2px;transform:translateX(-50%)}
+.gauge u{position:absolute;top:0;width:1px;height:12px;background:var(--mut)}
+label{display:block;font-size:.8rem;color:var(--mut);margin:8px 0 3px}
+input,select{width:100%;min-height:40px;padding:0 10px;background:#0f1824;border:1px solid var(--line);border-radius:6px}
+details{margin-top:10px;font-size:.84rem}summary{cursor:pointer;color:var(--gold);min-height:32px}
+pre{background:#0f1824;border:1px solid var(--line);border-radius:6px;padding:10px;overflow-x:auto;font-size:.76rem;margin:6px 0}
+.note{font-size:.78rem;color:var(--mut);margin-top:10px}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<div class="top"><div><h1>XAUUSD AI Bot</h1><span class="mu" id="src">Loading…</span></div><div id="px">–</div></div>
-<div id="tfs"></div>
-<div id="cw"><div id="ch"></div><canvas id="ov"></canvas></div>
+<header>
+  <h1>XAUUSD AI Bot<small>Smart-money structure monitor · analysis only, no orders</small></h1>
+  <span id="pill" class="pill mut" role="status">LOADING</span>
+  <button id="inst" class="btn p" hidden>Install app</button>
+</header>
+<noscript><p style="padding:12px">This dashboard needs JavaScript.</p></noscript>
+<main>
+  <section id="ban" class="card"></section>
 
-<div class="card">
- <div class="row"><span class="bd" id="bd">WAIT</span><span class="mu" id="str"></span>
- <label>Target RR<select id="rr"><option>1.5</option><option selected>2</option><option>3</option></select></label></div>
- <div class="g3"><div>Entry<b id="en">–</b></div><div>Stop Loss<b id="sl">–</b></div><div>Take Profit<b id="tp">–</b></div></div>
- <ul id="why"></ul>
- <button id="use">Load signal into calculator</button>
-</div>
+  <section id="sigc" class="card">
+    <div class="mut" id="plab" style="font-size:.8rem">—</div>
+    <div class="big" id="price">—</div><div id="chg" class="mut" style="font-size:.85rem"></div>
+    <div id="sig" class="mut">WAIT</div>
+    <div id="why" style="font-size:.88rem"></div>
+    <ul class="chk" id="chk"></ul>
+    <div id="lv" style="font-size:.84rem"></div>
+    <div class="note">Signals are rule-based, use closed candles only, and need all four checks to pass. Not financial advice.</div>
+  </section>
 
-<div class="card">
- <b>Risk / Reward calculator</b> <span class="mu">(1 lot = 100 oz)</span>
- <div class="g2">
-  <label>Balance ($)<input id="bal" type="number" value="1000" inputmode="decimal"></label>
-  <label>Risk (%)<input id="rk" type="number" value="1" inputmode="decimal"></label>
-  <label>Entry<input id="ce" type="number" inputmode="decimal"></label>
-  <label>Stop Loss<input id="cl" type="number" inputmode="decimal"></label>
-  <label>Take Profit<input id="ct" type="number" inputmode="decimal"></label>
- </div>
- <div class="g3"><div>Risk : Reward<b id="orr">–</b></div><div>Lot size<b id="olot">–</b></div><div>Risk / Reward<b id="ousd">–</b></div></div>
-</div>
-<p class="mu">Signals are rule-based and conditional, not guaranteed. Price feed is PAXG/USDT gold proxy, not Octa XAUUSD. Verify price, spread and contract size in Octa before any trade. No orders are sent or executed.</p>
+  <section id="chartc" class="card">
+    <h2>Price structure</h2>
+    <div class="row" id="tfs" role="group" aria-label="Timeframe"></div>
+    <div class="row" role="group" aria-label="Chart layers">
+      <button class="chip" data-ly="bos" aria-pressed="true">BOS / CHoCH</button>
+      <button class="chip" data-ly="fvg" aria-pressed="true">FVG</button>
+      <button class="chip" data-ly="ob" aria-pressed="true">Order blocks</button>
+      <button class="chip" data-ly="sw" aria-pressed="true">Swings</button>
+      <button class="chip" id="zo" aria-label="Zoom out">−</button>
+      <button class="chip" id="zi" aria-label="Zoom in">+</button>
+      <button class="chip" id="zl">Latest</button>
+    </div>
+    <div id="ro"></div>
+    <div id="cw"><canvas id="cv" aria-label="Candlestick chart with RSI"></canvas></div>
+    <div class="lg">
+      <span><i style="background:#2fb59a44;border-color:#2fb59a"></i>Bullish BOS / zone</span>
+      <span><i style="background:#e5624e44;border-color:#e5624e"></i>Bearish BOS / zone</span>
+      <span><i style="background:#5aa0ff33;border-color:#5aa0ff"></i>FVG (gap)</span>
+      <span><i style="background:#b78cff33;border-color:#b78cff"></i>Order block</span>
+      <span>Faded dashed = already mitigated</span>
+    </div>
+    <div class="note">Drag to pan, pinch or +/− to zoom, tap a candle for values. Scroll the page by dragging vertically. Axis time is your local time.</div>
+  </section>
 
+  <section id="rsic" class="card">
+    <h2>RSI (14)</h2>
+    <div class="big" id="rv">—</div><div id="rs" class="mut" style="font-size:.85rem"></div>
+    <div class="gauge" id="gauge"><u style="left:30%"></u><u style="left:50%"></u><u style="left:70%"></u><span style="left:30%">30</span><span style="left:50%">50</span><span style="left:70%">70</span><i id="gm" hidden></i></div>
+    <div class="note">Below 30 oversold, above 70 overbought, 50 is the momentum midline. Value is from the last closed candle.</div>
+  </section>
+
+  <section id="srcc" class="card"><h2>Data source</h2><dl id="src"></dl><div id="errs" class="note"></div></section>
+
+  <section id="feedc" class="card">
+    <h2>Data feed</h2>
+    <label for="fs">Feed</label><select id="fs"></select>
+    <details id="cdet"><summary>Custom XAUUSD endpoint (broker or provider)</summary>
+      <label for="cu">URL template — use {tf} and {limit}</label><input id="cu" placeholder="https://example.com/api/candles?symbol=XAUUSD&tf={tf}&limit={limit}" inputmode="url">
+      <label for="cs">Symbol label shown in the app</label><input id="cs" placeholder="XAUUSD">
+      <label for="ch">Optional header name</label><input id="ch" placeholder="X-API-Key">
+      <label for="cv2">Optional header value</label><input id="cv2" type="password" autocomplete="off">
+      <p class="note">Header values are stored in this browser only. Never put a broker trading key here — use a read-only market-data key or your own proxy. The endpoint must allow cross-origin (CORS) requests.</p>
+      <button class="btn p" id="save" style="margin-top:6px">Save and load</button>
+      <p class="note">Accepted JSON: an array, or an object with <code>candles</code>, <code>data</code>, <code>result</code> or <code>values</code>. Each candle is either <code>[time,open,high,low,close,volume]</code> or an object with those keys.</p>
+      <pre>[{"time":1731412800,"open":2601.5,"high":2604.2,"low":2599.8,"close":2603.1,"volume":812}]</pre>
+      <p class="note">For code-level feeds, register an adapter before the app loads data:</p>
+      <pre>registerFeed('myBroker',{
+  name:'My broker', sym:'XAUUSD', proxy:false,
+  host:'api.mybroker.com',
+  fetch:async(tf,limit)=>[{t,o,h,l,c,v}] // t = unix seconds
+});</pre>
+    </details>
+    <div class="note">Only real responses are ever shown. If every feed fails, the app shows "No data" or clearly labelled cached candles. It never generates prices or signals.</div>
+  </section>
+</main>
 <script>
-const $=id=>document.getElementById(id),
-TFS={M:['1M',2592000],W:['1w',604800],D1:['1d',86400],H4:['4h',14400],H1:['1h',3600],M30:['30m',1800],M15:['15m',900],M5:['5m',300]},
-API='https://data-api.binance.vision/api/v3/klines?symbol=PAXGUSDT&interval=',
-f2=v=>v==null?'–':v.toFixed(2),UP='#2fbf8a',DN='#e5574f';
-let tf='H1',data=[],sim=false,timer,S=null,SG=null,pl=[],lid=0;
-
-/* ---------- chart ---------- */
-const chart=LightweightCharts.createChart($('ch'),{autoSize:true,
- layout:{background:{color:'#0d1624'},textColor:'#8da0bb'},
- grid:{vertLines:{color:'#16253a'},horzLines:{color:'#16253a'}},
- rightPriceScale:{scaleMargins:{top:.05,bottom:.3}},
- timeScale:{timeVisible:true,rightOffset:5}});
-const cd=chart.addCandlestickSeries({upColor:UP,downColor:DN,borderVisible:false,wickUpColor:UP,wickDownColor:DN});
-const rl=chart.addLineSeries({priceScaleId:'rsi',color:'#d9a441',lineWidth:2,lastValueVisible:false,priceLineVisible:false,
- autoscaleInfoProvider:()=>({priceRange:{minValue:0,maxValue:100}})});
-chart.priceScale('rsi').applyOptions({scaleMargins:{top:.78,bottom:.02}});
-[30,50,70].forEach(v=>rl.createPriceLine({price:v,color:'#4b5d78',lineWidth:1,lineStyle:2,axisLabelVisible:false,title:'RSI '+v}));
-
-/* ---------- indicators ---------- */
-function rsi(c,p=14){const o=[];let g=0,l=0;
- for(let i=1;i<c.length;i++){const d=c[i].close-c[i-1].close,u=Math.max(d,0),w=Math.max(-d,0);
-  if(i<=p){g+=u;l+=w;if(i<p)continue;g/=p;l/=p}else{g=(g*(p-1)+u)/p;l=(l*(p-1)+w)/p}
-  o.push({time:c[i].time,value:100-100/(1+g/(l||1e-9))})}
- return o}
-function atr(c,p=14){let s=0;const a=Math.max(1,c.length-p);
- for(let i=a;i<c.length;i++)s+=Math.max(c[i].high-c[i].low,Math.abs(c[i].high-c[i-1].close),Math.abs(c[i].low-c[i-1].close));
- return s/(c.length-a)}
-
-/* ---------- Smart Money Concepts: swings, BOS/CHoCH, order blocks, FVG ---------- */
-function smc(c){
- const k=3,n=c.length,A=atr(c),ev=[],ob=[],fv=[];let sh=null,sl=null,tr=0;
- for(let j=2*k;j<n;j++){
-  const p=j-k;let H=1,L=1;
-  for(let m=p-k;m<=j;m++){if(m==p)continue;if(c[m].high>=c[p].high)H=0;if(c[m].low<=c[p].low)L=0}
-  if(H)sh={v:c[p].high,i:p};if(L)sl={v:c[p].low,i:p};
-  const x=c[j];
-  if(sh&&x.close>sh.v){let lo=sh.i;for(let m=sh.i;m<=j;m++)if(c[m].low<c[lo].low)lo=m;
-   let o=lo;for(let m=lo;m>=Math.max(0,lo-6);m--)if(c[m].close<c[m].open){o=m;break}
-   ev.push({d:1,t0:c[sh.i].time,t1:x.time,v:sh.v,l:tr>=0?'BOS':'CHoCH'});
-   ob.push({d:1,t:c[o].time,hi:c[o].high,lo:c[o].low,i:o});tr=1;sh=null}
-  if(sl&&x.close<sl.v){let hi=sl.i;for(let m=sl.i;m<=j;m++)if(c[m].high>c[hi].high)hi=m;
-   let o=hi;for(let m=hi;m>=Math.max(0,hi-6);m--)if(c[m].close>c[m].open){o=m;break}
-   ev.push({d:-1,t0:c[sl.i].time,t1:x.time,v:sl.v,l:tr<=0?'BOS':'CHoCH'});
-   ob.push({d:-1,t:c[o].time,hi:c[o].high,lo:c[o].low,i:o});tr=-1;sl=null}
- }
- for(let i=2;i<n;i++){const a=c[i-2],b=c[i];
-  if(b.low-a.high>A*.2)fv.push({d:1,t:a.time,hi:b.low,lo:a.high,i});
-  else if(a.low-b.high>A*.2)fv.push({d:-1,t:a.time,hi:a.low,lo:b.high,i})}
- const open=z=>!c.slice(z.i+1).some(x=>z.d>0?x.close<z.lo:x.close>z.hi);
- return{tr,A,ev:ev.slice(-5),ob:ob.filter(open).slice(-3),fv:fv.filter(open).slice(-4)}}
-
-/* ---------- signal engine (demo rules, score -6..+6) ---------- */
-function signal(c,s,r,rr){
- const x=c[c.length-1].close,A=s.A,why=[];
- const ema=(period)=>{const k=2/(period+1);let v=c[0].close;for(let i=1;i<c.length;i++)v=c[i].close*k+v*(1-k);return v};
- const fast=ema(20),slow=ema(50),trend=fast>slow?1:fast<slow?-1:0;
- const nr=z=>x>=z.lo-A*.25&&x<=z.hi+A*.25;
- const ob=s.ob.filter(nr).pop(),fg=s.fv.filter(nr).pop();
- let buy=0,sell=0;
- if(s.tr>0){buy+=2;why.push('Bullish market structure / BOS')}
- if(s.tr<0){sell+=2;why.push('Bearish market structure / BOS')}
- if(trend>0){buy++;why.push('EMA 20 above EMA 50')}
- if(trend<0){sell++;why.push('EMA 20 below EMA 50')}
- if(ob&&ob.d>0){buy+=2;why.push('Price inside bullish order block')}
- if(ob&&ob.d<0){sell+=2;why.push('Price inside bearish order block')}
- if(fg&&fg.d>0){buy++;why.push('Bullish fair value gap nearby')}
- if(fg&&fg.d<0){sell++;why.push('Bearish fair value gap nearby')}
- if(r>=50&&r<=68){buy++;why.push('RSI '+r.toFixed(0)+' supports bullish momentum')}
- if(r<=50&&r>=32){sell++;why.push('RSI '+r.toFixed(0)+' supports bearish momentum')}
- if(r>68)why.push('RSI overbought: avoid chasing BUY');
- if(r<32)why.push('RSI oversold: avoid chasing SELL');
- const d=buy>=5&&buy>sell?1:sell>=5&&sell>buy?-1:0,sc=d>0?buy:d<0?sell:Math.max(buy,sell);
- const o={d,sc,why};
- if(d){
-  const z=ob&&ob.d==d?ob:null;
-  let sl=z?(d>0?z.lo-A*.25:z.hi+A*.25):x-d*A*1.5;
-  if(d*(x-sl)<=0||Math.abs(x-sl)<A*.5)sl=x-d*A*1.2;
-  Object.assign(o,{en:x,sl,tp:x+d*Math.abs(x-sl)*rr});
- }else why.push('No confirmed setup: wait for at least 5 confluence points');
- return o
+"use strict";
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const TF={'5m':{b:'5m',y:'5',s:300},'15m':{b:'15m',y:'15',s:900},'1h':{b:'1h',y:'60',s:3600},'4h':{b:'4h',y:'240',s:14400}};
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const cfg=Object.assign({feed:'binance',tf:'15m',url:'',sym:'XAUUSD',hk:'',hv:''},store.get('cfg')||{});
+if(!TF[cfg.tf])cfg.tf='15m';
+const num=v=>{const x=typeof v==='string'?parseFloat(v):v;return Number.isFinite(x)?x:null};
+function mk(t,o,h,l,c,v){t=num(t);o=num(o);h=num(h);l=num(l);c=num(c);return[t,o,h,l,c].some(x=>x===null)||h<l?null:{t,o,h,l,c,v:num(v)||0}}
+const clean=a=>{const m=new Map();a.filter(Boolean).forEach(x=>m.set(x.t,x));return[...m.values()].sort((a,b)=>a.t-b.t)};
+function normAny(j){
+  const a=Array.isArray(j)?j:(j&&(j.candles||j.data||j.result||j.values))||[];
+  if(!Array.isArray(a))throw Error('response has no candle array');
+  return a.map(x=>{let t,o,h,l,c,v;
+    if(Array.isArray(x))[t,o,h,l,c,v]=x;else{t=x.time??x.t??x.timestamp??x.datetime??x.date;o=x.open??x.o;h=x.high??x.h;l=x.low??x.l;c=x.close??x.c;v=x.volume??x.v}
+    if(typeof t==='string'&&isNaN(t))t=Date.parse(t)/1000;else{t=+t;if(t>1e11)t/=1000}
+    return mk(t,o,h,l,c,v)});
 }
-
-/* ---------- overlay: FVG / OB zones and BOS lines ---------- */
-function draw(){
- const cv=$('ov'),B=$('cw'),w=B.clientWidth,h=B.clientHeight,d=devicePixelRatio||1;
- if(cv.width!=Math.round(w*d)){cv.width=Math.round(w*d);cv.height=Math.round(h*d)}
- const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);g.clearRect(0,0,w,h);if(!S)return;
- const ts=chart.timeScale(),R=ts.width?ts.width():w-55,X=t=>ts.timeToCoordinate(t),Y=p=>cd.priceToCoordinate(p);
- g.font='bold 10px sans-serif';
- const box=(z,col,lab)=>{const y0=Y(z.hi),y1=Y(z.lo);if(y0==null||y1==null)return;
-  let a=X(z.t);if(a==null||a<0)a=0;if(a>=R)return;
-  g.fillStyle=col+'30';g.fillRect(a,y0,R-a,y1-y0);g.strokeStyle=col;g.strokeRect(a,y0,R-a,y1-y0);
-  g.fillStyle=col;g.fillText(lab,a+3,y0+10)};
- S.fv.forEach(z=>box(z,z.d>0?'#5aa9e6':'#c78fd6','FVG'));
- S.ob.forEach(z=>box(z,z.d>0?UP:DN,'OB'));
- S.ev.forEach(e=>{const y=Y(e.v),x1=X(e.t1);if(y==null||x1==null)return;
-  let a=X(e.t0);if(a==null||a<0)a=0;
-  g.strokeStyle=g.fillStyle=e.d>0?UP:DN;g.setLineDash([4,3]);g.beginPath();g.moveTo(a,y);g.lineTo(x1,y);g.stroke();g.setLineDash([]);
-  g.fillText(e.l,(a+x1)/2-10,e.d>0?y-4:y+12)})}
-let q=0;const rd=()=>{if(!q)q=requestAnimationFrame(()=>{q=0;draw()})};
-chart.timeScale().subscribeVisibleLogicalRangeChange(rd);chart.subscribeCrosshairMove(rd);
-['pointermove','touchmove','wheel','pointerup'].forEach(e=>$('cw').addEventListener(e,rd,{passive:true}));
-
-/* ---------- dashboard ---------- */
-function analyze(){
- const r=rsi(data),L=data[data.length-1];S=smc(data);SG=signal(data,S,r[r.length-1].value,+$('rr').value);
- $('px').textContent=f2(L.close);
- const b=$('bd');b.textContent=SG.d>0?'BUY':SG.d<0?'SELL':'WAIT';b.className='bd '+b.textContent;
- $('str').textContent='Strength '+Math.abs(SG.sc)+' of 6';
- $('en').textContent=f2(SG.en);$('sl').textContent=f2(SG.sl);$('tp').textContent=f2(SG.tp);
- $('why').innerHTML=SG.why.map(w=>'<li>'+w+'</li>').join('');
- pl.forEach(l=>cd.removePriceLine(l));pl=[];
- if(SG.d)pl=[['Entry',SG.en,'#5aa9e6'],['SL',SG.sl,DN],['TP',SG.tp,UP]].map(([t,p,c])=>cd.createPriceLine({price:p,color:c,lineWidth:1,axisLabelVisible:true,title:t}));
- cd.setMarkers(SG.d?[{time:L.time,position:SG.d>0?'belowBar':'aboveBar',color:SG.d>0?UP:DN,shape:SG.d>0?'arrowUp':'arrowDown',text:SG.d>0?'Buy':'Sell'}]:[]);
- calc();draw()}
-function calc(){
- const v=id=>+$(id).value,e=v('ce'),s=v('cl'),t=v('ct'),risk=v('bal')*v('rk')/100,dist=Math.abs(e-s);
- if(!dist||!t){['orr','olot','ousd'].forEach(i=>$(i).textContent='–');return}
- const lots=risk/(dist*100),rew=lots*Math.abs(t-e)*100;
- $('orr').textContent='1 : '+(Math.abs(t-e)/dist).toFixed(2);$('olot').textContent=lots.toFixed(2);
- $('ousd').textContent='$'+risk.toFixed(0)+' / $'+rew.toFixed(0)}
-function prefill(){const L=data[data.length-1],A=S.A;
- $('ce').value=f2(SG.en||L.close);$('cl').value=f2(SG.sl||L.close-A*1.5);$('ct').value=f2(SG.tp||L.close+A*3);calc()}
-['bal','rk','ce','cl','ct'].forEach(i=>$(i).oninput=calc);
-$('use').onclick=prefill;$('rr').onchange=analyze;
-
-/* ---------- data: live Binance PAXG/USDT (gold-backed), fallback to simulated ---------- */
-function fake(){const st=TFS[tf][1],n=500,t0=Math.floor(Date.now()/1000/st)*st;let p=4000,s=7;
- const R=()=>(s=s*16807%2147483647)/2147483647,o=[];
- for(let i=0;i<n;i++){const v=p*.0009*Math.sqrt(Math.max(st/3600,.15)),c=p+Math.sin(i/31)*v*.7+(R()-.5)*2*v;
-  o.push({time:t0-(n-1-i)*st,open:p,high:Math.max(p,c)+R()*v*.5,low:Math.min(p,c)-R()*v*.5,close:c});p=c}
- return o}
-const bar=k=>({time:k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4]});
+/* ---- Feed adapter interface -------------------------------------------
+   {name, sym, proxy:boolean, host, fetch?(tf,limit)->[{t,o,h,l,c,v}]  OR  url(tf,limit)+parse(json)} */
+const FEEDS={
+  binance:{name:'Binance spot',sym:'PAXG/USDT',proxy:true,host:'data-api.binance.vision',
+    url:(tf,n)=>`https://data-api.binance.vision/api/v3/klines?symbol=PAXGUSDT&interval=${TF[tf].b}&limit=${n}`,
+    parse:j=>j.map(k=>mk(k[0]/1000,k[1],k[2],k[3],k[4],k[5]))},
+  bybit:{name:'Bybit spot',sym:'PAXG/USDT',proxy:true,host:'api.bybit.com',
+    url:(tf,n)=>`https://api.bybit.com/v5/market/kline?category=spot&symbol=PAXGUSDT&interval=${TF[tf].y}&limit=${n}`,
+    parse:j=>j.result.list.map(k=>mk(k[0]/1000,k[1],k[2],k[3],k[4],k[5]))},
+  custom:{name:'Custom feed',proxy:false,get sym(){return cfg.sym||'XAUUSD'},get host(){try{return new URL(cfg.url).host}catch(e){return 'not configured'}},
+    url:(tf,n)=>cfg.url.split('{tf}').join(tf).split('{limit}').join(n),parse:normAny}
+};
+window.registerFeed=(id,def)=>{FEEDS[id]=def;buildSel()};
+async function getCandles(f,tf,n){
+  if(f.fetch)return f.fetch(tf,n);
+  if(f===FEEDS.custom&&!/^https:\/\//.test(cfg.url))throw Error('set an https:// URL first');
+  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),10000),hd={};
+  if(f===FEEDS.custom&&cfg.hk&&cfg.hv)hd[cfg.hk]=cfg.hv;
+  try{const r=await fetch(f.url(tf,n),{headers:hd,signal:ac.signal,cache:'no-store'});
+    if(!r.ok)throw Error('HTTP '+r.status);return f.parse(await r.json())}
+  finally{clearTimeout(to)}
+}
+/* ---- Analysis (all derived from real candles) ------------------------- */
+function rsi(C,n=14){const r=Array(C.length).fill(null);if(C.length<=n)return r;let g=0,l=0;
+  for(let i=1;i<=n;i++){const d=C[i].c-C[i-1].c;d>0?g+=d:l-=d}g/=n;l/=n;r[n]=l?100-100/(1+g/l):100;
+  for(let i=n+1;i<C.length;i++){const d=C[i].c-C[i-1].c;g=(g*(n-1)+Math.max(d,0))/n;l=(l*(n-1)+Math.max(-d,0))/n;r[i]=l?100-100/(1+g/l):100}return r}
+function analyze(C){
+  const n=C.length,K=3,a={rsi:rsi(C),sw:[],brk:[],ob:[],fvg:[],trend:0,atr:0};
+  let s=0;const m=Math.min(14,n-1);
+  for(let i=n-m;i<n;i++)s+=Math.max(C[i].h-C[i].l,Math.abs(C[i].h-C[i-1].c),Math.abs(C[i].l-C[i-1].c));a.atr=s/m;
+  const conf={};
+  for(let i=K;i<n-K;i++){let H=1,L=1;
+    for(let j=i-K;j<=i+K;j++){if(j===i)continue;if(C[j].h>C[i].h)H=0;if(C[j].l<C[i].l)L=0}
+    if(H)(conf[i+K]=conf[i+K]||[]).push({i,p:C[i].h,t:'H'});
+    if(L)(conf[i+K]=conf[i+K]||[]).push({i,p:C[i].l,t:'L'})}
+  let hi=null,lo=null,pH=null,pL=null;
+  const brk=(dir,p,j)=>{
+    a.brk.push({dir,from:p.i,to:j,p:p.p,k:a.trend===dir?'BOS':(a.trend===0?'BOS':'CHoCH')});a.trend=dir;
+    let b=-1;for(let i=p.i;i<j;i++){const c=C[i];
+      if(dir>0&&c.c<c.o&&(b<0||c.l<C[b].l))b=i;if(dir<0&&c.c>c.o&&(b<0||c.h>C[b].h))b=i}
+    if(b>=0)a.ob.push({dir,i:b,top:C[b].h,bot:C[b].l,bi:j,mit:-1})};
+  for(let j=0;j<n;j++){
+    (conf[j]||[]).forEach(p=>{
+      if(p.t==='H'){p.lab=pH===null?'H':(p.p>pH?'HH':'LH');pH=p.p;hi=p}else{p.lab=pL===null?'L':(p.p>pL?'HL':'LL');pL=p.p;lo=p}
+      a.sw.push(p)});
+    if(hi&&!hi.x&&C[j].c>hi.p){hi.x=1;brk(1,hi,j)}
+    if(lo&&!lo.x&&C[j].c<lo.p){lo.x=1;brk(-1,lo,j)}}
+  a.ob.forEach(z=>{for(let k=z.bi+1;k<n;k++)if(z.dir>0?C[k].c<z.bot:C[k].c>z.top){z.mit=k;break}});
+  for(let i=2;i<n;i++){
+    const u=C[i].l-C[i-2].h,d=C[i-2].l-C[i].h;let z=null;
+    if(u>.1*a.atr)z={dir:1,i:i-1,top:C[i].l,bot:C[i-2].h,mit:-1};
+    else if(d>.1*a.atr)z={dir:-1,i:i-1,top:C[i-2].l,bot:C[i].h,mit:-1};
+    if(z){for(let k=i+1;k<n;k++)if(z.dir>0?C[k].l<=z.bot:C[k].h>=z.top){z.mit=k;break}a.fvg.push(z)}}
+  return a}
+function decide(A,C,st){
+  if(!st.ok)return{sig:'WAIT',why:st.msg,checks:[]};
+  const n=C.length,last=C[n-1],R=A.rsi[n-1],lb=A.brk[A.brk.length-1],res=[];
+  for(const d of[1,-1]){
+    const zs=[...A.ob,...A.fvg].filter(z=>z.dir===d&&z.mit<0&&last.c<=z.top+.25*A.atr&&last.c>=z.bot-.25*A.atr);
+    const z=zs.sort((x,y)=>Math.abs(last.c-(x.top+x.bot)/2)-Math.abs(last.c-(y.top+y.bot)/2))[0];
+    const ck=[
+      [A.trend===d,(d>0?'Bullish':'Bearish')+' structure',lb?`last break: ${lb.k} ${lb.dir>0?'up':'down'}`:'no structure break yet'],
+      [!!lb&&lb.dir===d&&n-1-lb.to<=30,'Break within 30 candles',lb?`${n-1-lb.to} candles ago`:'none'],
+      [!!z,'Price in unmitigated '+(d>0?'demand':'supply')+' zone',z?'inside active OB/FVG':'no active zone near price'],
+      [d>0?R>=50&&R<70:R>30&&R<=50,'RSI '+(d>0?'50–70':'30–50'),'RSI '+R.toFixed(1)]];
+    res.push({d,z,ck,score:ck.filter(c=>c[0]).length})}
+  res.sort((x,y)=>y.score-x.score||(x.d===A.trend?-1:1));const b=res[0];
+  const out={checks:b.ck,sig:'WAIT',why:`Only ${b.score} of 4 confirmations pass. Waiting.`};
+  if(b.score===4){const e=last.c,sl=b.d>0?b.z.bot-.25*A.atr:b.z.top+.25*A.atr,r=Math.abs(e-sl);
+    out.sig=b.d>0?'BUY':'SELL';out.why='All four confirmations pass on the last closed candle.';
+    out.lv={e,sl,tp:e+b.d*2*r}}
+  return out}
+/* ---- State, loading ---------------------------------------------------- */
+let S=null,D={C:[],A:null,nc:0},seq=0,sel=-1;const V={s:0,n:80,set:0};const ly={bos:1,fvg:1,ob:1,sw:1};
 async function load(){
- clearInterval(timer);const id=++lid;let d;
- try{const r=await fetch(API+TFS[tf][0]+'&limit=500');if(!r.ok)throw 0;d=(await r.json()).map(bar);sim=false}
- catch(e){d=fake();sim=true}
- if(id!=lid)return;data=d;
- $('src').textContent=sim?'Demo: simulated data ('+tf+')':'Live: PAXG/USDT gold proxy ('+tf+')';
- cd.setData(data);rl.setData(rsi(data));
- chart.timeScale().setVisibleLogicalRange({from:data.length-90,to:data.length+4});
- analyze();prefill();timer=setInterval(tick,sim?2000:5000)}
-async function tick(){
- const my=tf;let L=data[data.length-1];
- if(sim){const v=L.close*(1+(Math.random()-.5)*.0006);L.close=v;L.high=Math.max(L.high,v);L.low=Math.min(L.low,v)}
- else try{const a=await(await fetch(API+TFS[tf][0]+'&limit=2')).json();if(my!=tf)return;
-  a.map(bar).forEach(b=>{const e=data[data.length-1];if(b.time==e.time)data[data.length-1]=b;else if(b.time>e.time)data.push(b)})}
- catch(e){return}
- L=data[data.length-1];cd.update(L);const r=rsi(data);rl.update(r[r.length-1]);analyze()}
-
-$('tfs').innerHTML=Object.keys(TFS).map(k=>'<button data-k="'+k+'"'+(k==tf?' class="on"':'')+'>'+k+'</button>').join('');
-$('tfs').onclick=e=>{const k=e.target.dataset.k;if(!k)return;tf=k;[...$('tfs').children].forEach(b=>b.classList.toggle('on',b.dataset.k==k));load()};
-load();
+  const my=++seq,tf=cfg.tf,order=cfg.feed==='custom'?['custom']:[cfg.feed,...Object.keys(FEEDS).filter(k=>k!==cfg.feed&&FEEDS[k].proxy)].filter(k=>FEEDS[k]),errs=[];
+  for(const k of order){const f=FEEDS[k];
+    try{const c=clean(await getCandles(f,tf,300));if(c.length<30)throw Error('only '+c.length+' valid candles');
+      if(my!==seq)return;S={candles:c,id:k,f,at:Date.now(),cached:false,errs,tf};store.set('c:'+k+':'+tf,{c:c.slice(-300),at:S.at});return after()}
+    catch(e){errs.push(f.name+': '+(e.name==='AbortError'?'timeout':e.message||e))}}
+  if(my!==seq)return;
+  for(const k of order){const z=store.get('c:'+k+':'+tf);if(z&&z.c&&z.c.length>=30){S={candles:z.c,id:k,f:FEEDS[k],at:z.at,cached:true,errs,tf};return after()}}
+  S={none:1,errs,tf};after()}
+function after(){
+  const ok=S&&S.candles,C=ok?S.candles:[],prev=D.C.length;
+  if(ok){const sec=TF[S.tf].s;D.nc=C[C.length-1].t+sec>Date.now()/1000?C.length-1:C.length;
+    D.A=D.nc>=30?analyze(C.slice(0,D.nc)):null}else{D.nc=0;D.A=null}
+  D.C=C;const atEnd=!V.set||V.s>=prev-V.n+3;V.set=1;clampV();if(atEnd)V.s=C.length-V.n+6;clampV();
+  if(sel>=C.length)sel=-1;renderTop();ro();redraw()}
+function status(){
+  if(!S||S.none)return{k:'none',ok:false,msg:'No data available. No signal is produced without real candles.'};
+  const C=S.candles,sec=TF[S.tf].s,age=Date.now()/1000-C[C.length-1].t;
+  if(S.cached)return{k:'cached',ok:false,age,msg:'Showing cached candles from an earlier session. Not live, so no signal.'};
+  if(age>2*sec)return{k:'stale',ok:false,age,msg:`Latest candle is ${fa(age)} old. Feed is stale or that market is closed.`};
+  if(D.nc<60||!D.A)return{k:'live',ok:false,age,msg:'Not enough closed candles for reliable analysis.'};
+  return{k:'live',ok:true,age}}
+/* ---- UI rendering ------------------------------------------------------ */
+const p2=x=>x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),fa=s=>s<90?Math.round(s)+'s':s<5400?Math.round(s/60)+'m':(s/3600).toFixed(1)+'h';
+const utc=s=>new Date(s*1000).toISOString().slice(0,16).replace('T',' ')+' UTC',loc=s=>new Date(s*1000).toLocaleString([],{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
+function renderTop(){
+  const st=status(),f=S&&S.f,C=D.C;
+  const pl=$('#pill');pl.textContent={live:'LIVE',stale:'STALE',cached:'CACHED',none:'NO DATA'}[st.k];pl.className='pill '+{live:'up',stale:'warn',cached:'warn',none:'dn'}[st.k];
+  $('#ban').innerHTML=!f?'<b>No data source connected.</b> Nothing is shown until a real feed responds.'
+    :f.proxy?'<b>Proxy data, not XAUUSD.</b> PAXG/USDT is a gold-backed token priced in USDT. It trades 24/7 and differs from broker XAUUSD in price, spread and session hours. Check your broker’s own XAUUSD quote before acting on any level.'
+    :'<b>User-supplied feed labelled “'+esc(f.sym)+'”.</b> This app cannot verify the provider or that it matches your broker. Confirm before acting on any level.';
+  $('#plab').textContent=f?`${f.sym}${f.proxy?' · PROXY for XAUUSD':''} · ${f.name}${S.cached?' · cached':''}`:'No source';
+  if(C.length){const l=C[C.length-1],pc=C.length>1?C[C.length-2].c:l.o,d=l.c-pc;$('#price').textContent=p2(l.c);
+    $('#chg').innerHTML=`<span class="${d>=0?'up':'dn'}">${d>=0?'+':''}${p2(d)} vs previous candle</span> · candle ${esc(utc(l.t))}`}
+  else{$('#price').textContent='—';$('#chg').textContent=''}
+  const dc=D.nc>=30&&D.A?decide(D.A,C.slice(0,D.nc),st):{sig:'WAIT',why:st.msg||'Not enough data.',checks:[]};
+  const sg=$('#sig');sg.textContent=dc.sig;sg.className=dc.sig==='BUY'?'up':dc.sig==='SELL'?'dn':'warn';
+  $('#why').textContent=dc.why;
+  $('#chk').innerHTML=dc.checks.map(c=>`<li><span class="${c[0]?'up':'dn'}" aria-label="${c[0]?'pass':'fail'}">${c[0]?'✓':'✕'}</span><span>${esc(c[1])} <span class="mut">· ${esc(c[2])}</span></span></li>`).join('');
+  $('#lv').innerHTML=dc.lv?`<b>Reference levels</b> (zone and ATR based): entry ${p2(dc.lv.e)} · stop ${p2(dc.lv.sl)} · target ${p2(dc.lv.tp)} (2R). Levels are on ${esc(f.sym)}, so convert for your broker.`:'';
+  const R=D.A&&D.A.rsi[D.nc-1];
+  if(R!=null){$('#rv').textContent=R.toFixed(1);$('#rv').className='big '+(R>=70?'dn':R<=30?'up':'');
+    $('#rs').textContent=R>=70?'Overbought (above 70)':R<=30?'Oversold (below 30)':R>=50?'Neutral, above the 50 midline':'Neutral, below the 50 midline';
+    const g=$('#gm');g.hidden=false;g.style.left=R+'%'}else{$('#rv').textContent='—';$('#rs').textContent='Needs at least 15 closed candles';$('#gm').hidden=true}
+  const rows=[['Source',f?`${f.name} (${f.host})`:'—'],['Instrument',f?`${f.sym} ${f.proxy?'— proxy, not XAUUSD':'— user-supplied, unverified'}`:'—'],['Timeframe',cfg.tf]];
+  if(C.length){const l=C[C.length-1];rows.push(['Latest candle open',`${utc(l.t)} (${loc(l.t)} local)`],['Fetched',`${new Date(S.at).toLocaleString([],{hour12:false})} · ${fa((Date.now()-S.at)/1000)} ago${S.cached?' (cached)':''}`],['Candles',`${C.length} (${D.nc} closed)`])}
+  rows.push(['Data state',{live:'Live, refreshes every 30s',stale:'Stale',cached:'Cached copy, not live',none:'No data'}[st.k]]);
+  $('#src').innerHTML=rows.map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join('');
+  $('#errs').innerHTML=S&&S.errs&&S.errs.length?'Feed errors: '+esc(S.errs.join(' · ')):''}
+function ro(){const C=D.C;if(!C.length){$('#ro').textContent='';return}
+  const i=sel>=0?sel:C.length-1,c=C[i],r=D.A&&D.A.rsi[i];
+  $('#ro').textContent=`${loc(c.t)}${i>=D.nc?' (forming)':''} · O ${p2(c.o)} H ${p2(c.h)} L ${p2(c.l)} C ${p2(c.c)}${r!=null?' · RSI '+r.toFixed(1):''}`}
+function buildSel(){const s=$('#fs');s.innerHTML=Object.keys(FEEDS).map(k=>`<option value="${esc(k)}">${esc(FEEDS[k].name)} — ${esc(FEEDS[k].sym)}${FEEDS[k].proxy?' (proxy)':''}</option>`).join('');s.value=FEEDS[cfg.feed]?cfg.feed:'binance'}
+/* ---- Chart ------------------------------------------------------------- */
+const cv=$('#cv'),g=cv.getContext('2d'),PR=54;let raf=0;const redraw=()=>raf||(raf=requestAnimationFrame(()=>{raf=0;draw()}));
+function clampV(){const L=D.C.length;V.n=Math.max(15,Math.min(V.n,Math.max(L,15),300));V.s=Math.max(-2,Math.min(V.s,L-V.n+8))}
+const cwid=()=>(cv.clientWidth-PR)/V.n;
+function draw(){
+  const dpr=devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;if(!W||!H)return;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
+  g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);g.font='11px system-ui,sans-serif';
+  const C=D.C;if(!C.length){g.fillStyle='#93a4b8';g.textAlign='center';g.fillText(S&&S.none?'No data. See “Data source” below.':'Loading…',W/2,H/2);return}
+  const A=D.A,tH=18,rH=Math.round(H*.22),gp=8,top=6,pH=H-tH-rH-gp-top-4,cw=cwid(),X=i=>(i-V.s+.5)*cw;
+  const i0=Math.max(0,Math.floor(V.s)),i1=Math.min(C.length-1,Math.ceil(V.s+V.n));
+  let lo=1e18,hi=-1e18;for(let i=i0;i<=i1;i++){lo=Math.min(lo,C[i].l);hi=Math.max(hi,C[i].h)}
+  const pd=(hi-lo)*.08||1;lo-=pd;hi+=pd;
+  const Y=p=>top+(hi-p)/(hi-lo)*pH,RY=v=>top+pH+gp+(100-v)/100*rH,rc=(c,al)=>c+al;
+  const col={u:'#2fb59a',d:'#e5624e',f:'#5aa0ff',o:'#b78cff',m:'#93a4b8',l:'#26364a'};
+  g.textAlign='left';g.fillStyle=col.m;g.strokeStyle=col.l;g.lineWidth=1;
+  for(let k=0;k<=4;k++){const p=lo+(hi-lo)*k/4,y=Y(p);g.beginPath();g.moveTo(0,y);g.lineTo(W-PR,y);g.stroke();g.fillText(p.toFixed(1),W-PR+5,y+4)}
+  g.save();g.beginPath();g.rect(0,0,W-PR,H);g.clip();
+  const box=(z,cl,lab,solid)=>{const mit=z.mit>=0;if(mit&&z.mit<i0)return;const x1=X(z.i)-cw/2,x2=mit?X(z.mit)+cw/2:W-PR,y1=Y(z.top),y2=Y(z.bot);
+    g.globalAlpha=mit?.07:.2;g.fillStyle=cl;g.fillRect(x1,y1,x2-x1,Math.max(2,y2-y1));
+    g.globalAlpha=mit?.45:1;g.strokeStyle=cl;g.setLineDash(mit||!solid?[4,3]:[]);g.strokeRect(x1,y1,x2-x1,Math.max(2,y2-y1));g.setLineDash([]);
+    if(y2-y1>11||true){g.fillStyle=cl;g.fillText(lab+(mit?' (used)':''),Math.max(x1,0)+4,y1-3)}g.globalAlpha=1};
+  if(A&&ly.fvg)A.fvg.slice(-14).forEach(z=>box(z,col.f,'FVG '+(z.dir>0?'▲':'▼'),false));
+  if(A&&ly.ob)A.ob.slice(-8).forEach(z=>box(z,col.o,(z.dir>0?'Bull':'Bear')+' OB',true));
+  for(let i=i0;i<=i1;i++){const c=C[i],x=X(i),up=c.c>=c.o,cl=up?col.u:col.d,bw=Math.max(1,cw*.66);
+    g.strokeStyle=cl;g.fillStyle=cl;g.beginPath();g.moveTo(x,Y(c.h));g.lineTo(x,Y(c.l));g.stroke();
+    g.fillRect(x-bw/2,Y(Math.max(c.o,c.c)),bw,Math.max(1,Math.abs(Y(c.o)-Y(c.c))))}
+  if(A&&ly.bos)A.brk.slice(-8).forEach(b=>{if(b.to<i0||b.from>i1)return;const cl=b.dir>0?col.u:col.d,y=Y(b.p),x1=X(b.from),x2=X(b.to),t=b.k;
+    g.strokeStyle=cl;g.lineWidth=1.5;g.setLineDash([6,4]);g.beginPath();g.moveTo(x1,y);g.lineTo(x2,y);g.stroke();g.setLineDash([]);g.lineWidth=1;
+    const w=g.measureText(t).width+10,mx=Math.max(Math.min((x1+x2)/2,W-PR-w/2),w/2),ty=b.dir>0?y-9:y+9;
+    g.fillStyle='#0d1520';g.fillRect(mx-w/2,ty-8,w,16);g.strokeStyle=cl;g.strokeRect(mx-w/2,ty-8,w,16);g.fillStyle=cl;g.textAlign='center';g.fillText(t,mx,ty+4);g.textAlign='left'});
+  if(A&&ly.sw)A.sw.forEach(p=>{if(p.i<i0||p.i>i1)return;const x=X(p.i),up=p.t==='H',y=Y(p.p)+(up?-7:13);g.fillStyle=col.m;g.textAlign='center';g.fillText(p.lab,x,y);g.textAlign='left'});
+  if(sel>=0){g.strokeStyle='#93a4b855';g.beginPath();g.moveTo(X(sel),0);g.lineTo(X(sel),H-tH);g.stroke()}
+  g.restore();
+  const lc=C[C.length-1].c,ly0=Y(lc);g.strokeStyle='#d9a441';g.setLineDash([2,3]);g.beginPath();g.moveTo(0,ly0);g.lineTo(W-PR,ly0);g.stroke();g.setLineDash([]);
+  g.fillStyle='#d9a441';g.fillRect(W-PR,ly0-8,PR,16);g.fillStyle='#1a1405';g.fillText(lc.toFixed(1),W-PR+4,ly0+4);
+  /* RSI panel with 30 / 50 / 70 levels */
+  const r0=RY(100),r1=RY(0);g.fillStyle='#e5624e18';g.fillRect(0,RY(100),W-PR,RY(70)-RY(100));g.fillStyle='#2fb59a18';g.fillRect(0,RY(30),W-PR,RY(0)-RY(30));
+  g.strokeStyle=col.l;g.strokeRect(.5,r0,W-PR-1,r1-r0);
+  [[70,'#e5624e',[]],[50,col.m,[2,4]],[30,'#2fb59a',[]]].forEach(([v,cl,d])=>{g.strokeStyle=cl;g.globalAlpha=v===50?.7:.8;g.setLineDash(d);g.beginPath();g.moveTo(0,RY(v));g.lineTo(W-PR,RY(v));g.stroke();g.setLineDash([]);g.globalAlpha=1;g.fillStyle=cl;g.fillText(String(v),W-PR+5,RY(v)+4)});
+  g.fillStyle=col.m;g.fillText('RSI 14',6,r0+12);
+  if(A){g.save();g.beginPath();g.rect(0,r0,W-PR,r1-r0);g.clip();g.strokeStyle='#d9a441';g.lineWidth=1.5;g.beginPath();let st=0;
+    for(let i=Math.max(0,i0-1);i<=Math.min(i1,D.nc-1);i++){const v=A.rsi[i];if(v==null)continue;st?g.lineTo(X(i),RY(v)):g.moveTo(X(i),RY(v));st=1}g.stroke();g.restore();g.lineWidth=1;
+    const R=A.rsi[D.nc-1];if(R!=null){const y=RY(R);g.fillStyle='#d9a441';g.fillRect(W-PR,y-8,PR,16);g.fillStyle='#1a1405';g.fillText(R.toFixed(1),W-PR+4,y+4)}}
+  /* time axis */
+  g.fillStyle=col.m;g.textAlign='center';const step=Math.max(1,Math.ceil(78/cw));
+  for(let i=Math.ceil(i0/step)*step;i<=i1;i+=step){const d=new Date(C[i].t*1000),lab=TF[cfg.tf].s>=3600&&d.getHours()===0?d.toLocaleDateString([],{day:'2-digit',month:'short'}):d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});g.fillText(lab,X(i),H-5)}
+  g.textAlign='left'}
+/* pan / pinch / tap */
+const P=new Map();let moved=0,pd0=0;
+const pick=x=>{const L=D.C.length;if(!L)return;const r=cv.getBoundingClientRect();sel=Math.max(0,Math.min(L-1,Math.round((x-r.left)/cwid()+V.s-.5)));ro();redraw()};
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);P.set(e.pointerId,e.clientX);moved=0;if(P.size===2){const [a,b]=[...P.values()];pd0=Math.abs(a-b)}});
+cv.addEventListener('pointermove',e=>{
+  if(!P.has(e.pointerId)){if(e.pointerType==='mouse')pick(e.clientX);return}
+  const old=P.get(e.pointerId);P.set(e.pointerId,e.clientX);
+  if(P.size===1){moved+=Math.abs(e.clientX-old);V.s-=(e.clientX-old)/cwid()}
+  else if(P.size===2){const [a,b]=[...P.values()],d=Math.abs(a-b);if(pd0>20&&d>20)V.n*=pd0/d;pd0=d;moved+=10}
+  clampV();redraw()});
+const up=e=>{if(P.has(e.pointerId)){if(P.size===1&&moved<6&&e.type==='pointerup')pick(e.clientX);P.delete(e.pointerId)}};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();V.n*=e.deltaY>0?1.1:.9}else if(Math.abs(e.deltaX)>Math.abs(e.deltaY)){e.preventDefault();V.s+=e.deltaX/cwid()}else return;clampV();redraw()},{passive:false});
+new ResizeObserver(redraw).observe(cv);
+$('#zi').onclick=()=>{V.n*=.75;clampV();redraw()};$('#zo').onclick=()=>{V.n*=1.33;clampV();redraw()};
+$('#zl').onclick=()=>{V.s=D.C.length-V.n+6;clampV();sel=-1;ro();redraw()};
+document.querySelectorAll('[data-ly]').forEach(b=>b.onclick=()=>{const k=b.dataset.ly;ly[k]=!ly[k];b.setAttribute('aria-pressed',!!ly[k]);redraw()});
+$('#tfs').innerHTML=Object.keys(TF).map(k=>`<button class="chip" data-tf="${k}" aria-pressed="${k===cfg.tf}">${k}</button>`).join('');
+document.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{cfg.tf=b.dataset.tf;store.set('cfg',cfg);document.querySelectorAll('[data-tf]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  V.set=0;sel=-1;S=null;D={C:[],A:null,nc:0};renderTop();redraw();load()});
+/* feed settings */
+buildSel();$('#cu').value=cfg.url;$('#cs').value=cfg.sym;$('#ch').value=cfg.hk;$('#cv2').value=cfg.hv;
+$('#fs').onchange=e=>{cfg.feed=e.target.value;store.set('cfg',cfg);if(cfg.feed==='custom')$('#cdet').open=true;V.set=0;load()};
+$('#save').onclick=()=>{Object.assign(cfg,{url:$('#cu').value.trim(),sym:$('#cs').value.trim()||'XAUUSD',hk:$('#ch').value.trim(),hv:$('#cv2').value,feed:'custom'});store.set('cfg',cfg);$('#fs').value='custom';V.set=0;load()};
+/* PWA */
+let dp=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#inst').hidden=false});
+$('#inst').onclick=async()=>{if(dp){dp.prompt();await dp.userChoice;dp=null;$('#inst').hidden=true}};
+addEventListener('appinstalled',()=>$('#inst').hidden=true);
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+/* refresh loop */
+setInterval(()=>{if(!document.hidden)load()},30000);setInterval(()=>{if(!document.hidden)renderTop()},1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});addEventListener('online',load);
+renderTop();load();
 </script>
-<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/XAUUSD-AI-BOT/sw.js").catch(console.error));}</script>\n</body>
+</body>
 </html>
