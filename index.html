@@ -123,6 +123,13 @@ pre{background:#0f1824;border:1px solid var(--line);border-radius:6px;padding:10
 
   <section id="feedc" class="card">
     <h2>Data feed</h2>
+    <label for="marketSelect">Market / instrument</label><select id="marketSelect">
+      <optgroup label="Metals"><option value="XAUUSD">Gold · XAUUSD reference</option><option value="XAGUSD">Silver · XAGUSD reference</option></optgroup>
+      <optgroup label="Forex"><option value="EURUSD">EUR/USD</option><option value="GBPUSD">GBP/USD</option><option value="USDJPY">USD/JPY</option><option value="AUDUSD">AUD/USD</option><option value="USDCAD">USD/CAD</option><option value="USDINR">USD/INR</option></optgroup>
+      <optgroup label="Crypto"><option value="BTCUSDT">Bitcoin · BTC/USDT</option><option value="ETHUSDT">Ethereum · ETH/USDT</option><option value="SOLUSDT">Solana · SOL/USDT</option><option value="BNBUSDT">BNB · BNB/USDT</option></optgroup>
+      <optgroup label="Indices"><option value="SPX">S&amp;P 500</option><option value="NDX">Nasdaq 100</option><option value="DJI">Dow Jones</option></optgroup>
+    </select>
+    <p class="note">Select an instrument to run the rules engine on its available candles. The app switches data providers automatically.</p>
     <label for="fs">Feed</label><select id="fs"></select>
     <details id="cdet"><summary>Custom XAUUSD endpoint (broker or provider)</summary>
       <label for="cu">URL template — use {tf} and {limit}</label><input id="cu" placeholder="https://example.com/api/candles?symbol=XAUUSD&tf={tf}&limit={limit}" inputmode="url">
@@ -148,7 +155,7 @@ pre{background:#0f1824;border:1px solid var(--line);border-radius:6px;padding:10
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const TF={'5m':{b:'5m',y:'5',s:300},'15m':{b:'15m',y:'15',s:900},'1h':{b:'1h',y:'60',s:3600},'4h':{b:'4h',y:'240',s:14400}};
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const cfg=Object.assign({feed:'binance',tf:'15m',url:'',sym:'XAUUSD',hk:'',hv:''},store.get('cfg')||{});
+const cfg=Object.assign({feed:'auto',market:'XAUUSD',tf:'15m',url:'',sym:'XAUUSD',hk:'',hv:''},store.get('cfg')||{});
 if(!TF[cfg.tf])cfg.tf='15m';
 const num=v=>{const x=typeof v==='string'?parseFloat(v):v;return Number.isFinite(x)?x:null};
 function mk(t,o,h,l,c,v){t=num(t);o=num(o);h=num(h);l=num(l);c=num(c);return[t,o,h,l,c].some(x=>x===null)||h<l?null:{t,o,h,l,c,v:num(v)||0}}
@@ -163,11 +170,56 @@ function normAny(j){
 }
 /* ---- Feed adapter interface -------------------------------------------
    {name, sym, proxy:boolean, host, fetch?(tf,limit)->[{t,o,h,l,c,v}]  OR  url(tf,limit)+parse(json)} */
+const MARKETS={
+  'XAUUSD':{label:'Gold · XAUUSD spot reference',symbol:'GC=F',tv:'OANDA:XAUUSD',kind:'yahoo',proxy:true},
+  'XAGUSD':{label:'Silver · XAGUSD futures reference',symbol:'SI=F',tv:'OANDA:XAGUSD',kind:'yahoo',proxy:true},
+  'EURUSD':{label:'EUR/USD',symbol:'EURUSD=X',tv:'OANDA:EURUSD',kind:'yahoo'},
+  'GBPUSD':{label:'GBP/USD',symbol:'GBPUSD=X',tv:'OANDA:GBPUSD',kind:'yahoo'},
+  'USDJPY':{label:'USD/JPY',symbol:'JPY=X',tv:'OANDA:USDJPY',kind:'yahoo'},
+  'AUDUSD':{label:'AUD/USD',symbol:'AUDUSD=X',tv:'OANDA:AUDUSD',kind:'yahoo'},
+  'USDCAD':{label:'USD/CAD',symbol:'CAD=X',tv:'OANDA:USDCAD',kind:'yahoo'},
+  'USDINR':{label:'USD/INR',symbol:'INR=X',tv:'FX_IDC:USDINR',kind:'yahoo'},
+  'BTCUSDT':{label:'Bitcoin · BTC/USDT',symbol:'BTCUSDT',tv:'BINANCE:BTCUSDT',kind:'binance'},
+  'ETHUSDT':{label:'Ethereum · ETH/USDT',symbol:'ETHUSDT',tv:'BINANCE:ETHUSDT',kind:'binance'},
+  'SOLUSDT':{label:'Solana · SOL/USDT',symbol:'SOLUSDT',tv:'BINANCE:SOLUSDT',kind:'binance'},
+  'BNBUSDT':{label:'BNB · BNB/USDT',symbol:'BNBUSDT',tv:'BINANCE:BNBUSDT',kind:'binance'},
+  'SPX':{label:'S&P 500 index',symbol:'^GSPC',tv:'FOREXCOM:SPXUSD',kind:'yahoo'},
+  'NDX':{label:'Nasdaq 100 index',symbol:'^NDX',tv:'NASDAQ:NDX',kind:'yahoo'},
+  'DJI':{label:'Dow Jones index',symbol:'^DJI',tv:'TVC:DJI',kind:'yahoo'}
+};
+const market=()=>MARKETS[cfg.market]||MARKETS.XAUUSD;
 const FEEDS={
-  binance:{name:'Binance spot',sym:'PAXG/USDT',proxy:true,host:'data-api.binance.vision',
+  auto:{name:'Free public feeds (auto)',get sym(){return market().label},get host(){return market().kind==='binance'?'data-api.binance.vision':'query1.finance.yahoo.com'},get proxy(){return !!market().proxy},
+    fetch:async(tf,n)=>{
+      const m=market();
+      if(m.kind==='binance'){
+        const interval=TF[tf].b;
+        const u=`https://data-api.binance.vision/api/v3/klines?symbol=${encodeURIComponent(m.symbol)}&interval=${interval}&limit=${n}`;
+        const q=await fetch(u,{cache:'no-store'});if(!q.ok)throw Error('Binance HTTP '+q.status);
+        return (await q.json()).map(k=>mk(+k[0]/1000,k[1],k[2],k[3],k[4],k[5]));
+      }
+      const interval=TF[tf].b==='5m'?'5m':TF[tf].b==='15m'?'15m':TF[tf].b==='1h'?'60m':'60m';
+      const span=TF[tf].s*n*1.6;
+      const end=Math.floor(Date.now()/1000),start=end-span;
+      const u=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(m.symbol)}?period1=${Math.floor(start)}&period2=${end}&interval=${interval}&events=history`;
+      const q=await fetch(u,{cache:'no-store'});if(!q.ok)throw Error('Yahoo Finance HTTP '+q.status);
+      const j=await q.json(),res=j.chart&&j.chart.result&&j.chart.result[0];
+      if(!res)throw Error(j.chart&&j.chart.error&&j.chart.error.description||'No Yahoo candle data');
+      const quote=res.indicators.quote[0],raw=(res.timestamp||[]).map((t,i)=>mk(t,quote.open[i],quote.high[i],quote.low[i],quote.close[i],quote.volume&&quote.volume[i]));
+      let candles=raw.filter(Boolean);
+      if(tf==='4h'){
+        const buckets=new Map();
+        candles.forEach(c=>{const key=Math.floor(c.t/14400)*14400;const z=buckets.get(key);
+          if(!z)buckets.set(key,{t:key,o:c.o,h:c.h,l:c.l,c:c.c,v:c.v});
+          else{z.h=Math.max(z.h,c.h);z.l=Math.min(z.l,c.l);z.c=c.c;z.v+=c.v}});
+        candles=[...buckets.values()];
+      }
+      return candles.slice(-n);
+    }},
+  binance:{name:'Binance spot (PAXG proxy)',sym:'PAXG/USDT',proxy:true,host:'data-api.binance.vision',
     url:(tf,n)=>`https://data-api.binance.vision/api/v3/klines?symbol=PAXGUSDT&interval=${TF[tf].b}&limit=${n}`,
     parse:j=>j.map(k=>mk(k[0]/1000,k[1],k[2],k[3],k[4],k[5]))},
-  bybit:{name:'Bybit spot',sym:'PAXG/USDT',proxy:true,host:'api.bybit.com',
+  bybit:{name:'Bybit spot (PAXG proxy)',sym:'PAXG/USDT',proxy:true,host:'api.bybit.com',
     url:(tf,n)=>`https://api.bybit.com/v5/market/kline?category=spot&symbol=PAXGUSDT&interval=${TF[tf].y}&limit=${n}`,
     parse:j=>j.result.list.map(k=>mk(k[0]/1000,k[1],k[2],k[3],k[4],k[5]))},
   custom:{name:'Custom feed',proxy:false,get sym(){return cfg.sym||'XAUUSD'},get host(){try{return new URL(cfg.url).host}catch(e){return 'not configured'}},
@@ -287,7 +339,7 @@ function renderTop(){
 function ro(){const C=D.C;if(!C.length){$('#ro').textContent='';return}
   const i=sel>=0?sel:C.length-1,c=C[i],r=D.A&&D.A.rsi[i];
   $('#ro').textContent=`${loc(c.t)}${i>=D.nc?' (forming)':''} · O ${p2(c.o)} H ${p2(c.h)} L ${p2(c.l)} C ${p2(c.c)}${r!=null?' · RSI '+r.toFixed(1):''}`}
-function buildSel(){const s=$('#fs');s.innerHTML=Object.keys(FEEDS).map(k=>`<option value="${esc(k)}">${esc(FEEDS[k].name)} — ${esc(FEEDS[k].sym)}${FEEDS[k].proxy?' (proxy)':''}</option>`).join('');s.value=FEEDS[cfg.feed]?cfg.feed:'binance'}
+function buildSel(){const s=$('#fs');s.innerHTML=Object.keys(FEEDS).map(k=>`<option value="${esc(k)}">${esc(FEEDS[k].name)} — ${esc(FEEDS[k].sym)}${FEEDS[k].proxy?' (proxy)':''}</option>`).join('');s.value=FEEDS[cfg.feed]?cfg.feed:'auto'}
 /* ---- Chart ------------------------------------------------------------- */
 const cv=$('#cv'),g=cv.getContext('2d'),PR=54;let raf=0;const redraw=()=>raf||(raf=requestAnimationFrame(()=>{raf=0;draw()}));
 function clampV(){const L=D.C.length;V.n=Math.max(15,Math.min(V.n,Math.max(L,15),300));V.s=Math.max(-2,Math.min(V.s,L-V.n+8))}
@@ -357,7 +409,7 @@ $('#tfs').innerHTML=Object.keys(TF).map(k=>`<button class="chip" data-tf="${k}" 
 document.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{cfg.tf=b.dataset.tf;store.set('cfg',cfg);document.querySelectorAll('[data-tf]').forEach(x=>x.setAttribute('aria-pressed',x===b));
   V.set=0;sel=-1;S=null;D={C:[],A:null,nc:0};renderTop();redraw();load()});
 /* feed settings */
-buildSel();$('#cu').value=cfg.url;$('#cs').value=cfg.sym;$('#ch').value=cfg.hk;$('#cv2').value=cfg.hv;
+buildSel();$('#marketSelect').value=MARKETS[cfg.market]?cfg.market:'XAUUSD';$('#marketSelect').onchange=e=>{cfg.market=e.target.value;cfg.feed='auto';store.set('cfg',cfg);$('#fs').value='auto';const tv=MARKETS[cfg.market].tv;$('#tvSymbol').value=tv;tvLoad();V.set=0;sel=-1;load()};$('#cu').value=cfg.url;$('#cs').value=cfg.sym;$('#ch').value=cfg.hk;$('#cv2').value=cfg.hv;
 $('#fs').onchange=e=>{cfg.feed=e.target.value;store.set('cfg',cfg);if(cfg.feed==='custom')$('#cdet').open=true;V.set=0;load()};
 $('#save').onclick=()=>{Object.assign(cfg,{url:$('#cu').value.trim(),sym:$('#cs').value.trim()||'XAUUSD',hk:$('#ch').value.trim(),hv:$('#cv2').value,feed:'custom'});store.set('cfg',cfg);$('#fs').value='custom';V.set=0;load()};
 /* TradingView multi-market chart (visual display; not the AI data feed) */
@@ -373,6 +425,7 @@ document.querySelectorAll('[data-tv]').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('[data-tv]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
   tvLoad();
 });
+if(MARKETS[cfg.market])$('#tvSymbol').value=MARKETS[cfg.market].tv;
 tvLoad();
 /* PWA */
 let dp=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#inst').hidden=false});
