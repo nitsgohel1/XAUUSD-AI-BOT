@@ -70,6 +70,8 @@ pre{background:#0f1824;border:1px solid var(--line);border-radius:6px;padding:10
     <div id="why" style="font-size:.88rem"></div>
     <ul class="chk" id="chk"></ul>
     <div id="lv" style="font-size:.84rem"></div>
+    <div id="mtf" class="note">Multi-timeframe trend: loading higher-timeframe candles…</div>
+    <div id="fib" class="note"></div>
     <div class="note">Signals are rule-based, use closed candles only, and need all four checks to pass. Not financial advice.</div>
   </section>
 
@@ -132,6 +134,7 @@ pre{background:#0f1824;border:1px solid var(--line);border-radius:6px;padding:10
     <p class="note">Select an instrument to run the rules engine on its available candles. The app switches data providers automatically.</p>
     <label for="fs">Feed</label><select id="fs"></select>
     <details id="cdet"><summary>Custom XAUUSD endpoint (Cloudflare Worker)</summary>
+      <p class="note">For exact Octa XAUUSD spot candles, configure an official read-only Octa/provider endpoint here if your account offers one. Do not paste passwords or trading keys. The built-in Cloudflare Worker is only a GC=F futures reference feed.</p>
       <p class="note">Free read-only setup: deploy the repository file <code>cloudflare/worker.js</code> to Cloudflare Workers, then paste your Worker URL below. This source uses Yahoo GC=F COMEX gold futures as a reference, not the exact Octa XAUUSD spot quote.</p>
       <label for="cu">URL template — use {tf} and {limit}</label><input id="cu" placeholder="https://YOUR-WORKER.workers.dev/?tf={tf}&limit={limit}" inputmode="url">
       <label for="cs">Symbol label shown in the app</label><input id="cs" placeholder="XAUUSD">
@@ -154,7 +157,7 @@ pre{background:#0f1824;border:1px solid var(--line);border-radius:6px;padding:10
 <script>
 "use strict";
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const TF={'5m':{b:'5m',y:'5',s:300},'15m':{b:'15m',y:'15',s:900},'1h':{b:'1h',y:'60',s:3600},'4h':{b:'4h',y:'240',s:14400}};
+const TF={'5m':{b:'5m',y:'5',s:300},'15m':{b:'15m',y:'15',s:900},'1h':{b:'1h',y:'60',s:3600},'4h':{b:'4h',y:'240',s:14400},'1d':{b:'1d',y:'D',s:86400},'1w':{b:'1wk',y:'W',s:604800}};
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const cfg=Object.assign({feed:'auto',market:'XAUUSD',tf:'15m',url:'',sym:'XAUUSD',hk:'',hv:''},store.get('cfg')||{});
 if(!TF[cfg.tf])cfg.tf='15m';
@@ -305,11 +308,35 @@ async function load(){
   const my=++seq,tf=cfg.tf,order=cfg.feed==='custom'?['custom']:cfg.feed==='auto'?['auto']:[cfg.feed,...Object.keys(FEEDS).filter(k=>k!==cfg.feed&&FEEDS[k].proxy)].filter(k=>FEEDS[k]),errs=[];
   for(const k of order){const f=FEEDS[k];
     try{const c=clean(await getCandles(f,tf,300));if(c.length<30)throw Error('only '+c.length+' valid candles');
-      if(my!==seq)return;S={candles:c,id:k,f,at:Date.now(),cached:false,errs,tf};store.set('c:'+k+':'+tf,{c:c.slice(-300),at:S.at});return after()}
+      if(my!==seq)return;S={candles:c,id:k,f,at:Date.now(),cached:false,errs,tf};loadHigherTimeframes();store.set('c:'+k+':'+tf,{c:c.slice(-300),at:S.at});return after()}
     catch(e){errs.push(f.name+': '+(e.name==='AbortError'?'timeout':e.message||e))}}
   if(my!==seq)return;
   for(const k of order){const z=store.get('c:'+k+':'+tf);if(z&&z.c&&z.c.length>=30){S={candles:z.c,id:k,f:FEEDS[k],at:z.at,cached:true,errs,tf};return after()}}
   S={none:1,errs,tf};after()}
+let mtfLoadedAt=0,mtfBusy=false;
+async function loadHigherTimeframes(force=false){
+  if(mtfBusy||(!force&&Date.now()-mtfLoadedAt<300000))return;
+  mtfBusy=true;
+  const el=$('#mtf');el.textContent='Multi-timeframe trend: loading 1H, 4H, 1D and 1W…';
+  try{
+    const frames=['1h','4h','1d','1w'];
+    const results=await Promise.all(frames.map(async tf=>{
+      const u='https://xauusd-ai-bot.nitsgohel1.workers.dev/?tf='+tf+'&limit=300';
+      const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw Error(tf+' HTTP '+r.status);
+      const j=await r.json();if(!Array.isArray(j.candles)||j.candles.length<30)throw Error(tf+' insufficient candles');
+      const candles=clean(j.candles.map(k=>mk(k[0],k[1],k[2],k[3],k[4],k[5])));
+      const a=analyze(candles),last=candles[candles.length-1],rv=a.rsi[a.rsi.length-1];
+      const bias=a.trend>0&&rv>=50?'Bullish':a.trend<0&&rv<=50?'Bearish':'Neutral';
+      return {tf,bias,price:last.c,rsi:rv};
+    }));
+    el.innerHTML='<b>Multi-timeframe bias</b>: '+results.map(x=>x.tf.toUpperCase()+' '+x.bias+' (RSI '+(x.rsi==null?'—':x.rsi.toFixed(1))+')').join(' · ');
+    const directional=results.filter(x=>x.bias!=='Neutral');
+    const same=directional.length===4&&directional.every(x=>x.bias===directional[0].bias);
+    el.innerHTML+=' · <b>'+ (same?'4/4 aligned':'No full alignment')+'</b>';
+    mtfLoadedAt=Date.now();
+  }catch(e){el.textContent='Multi-timeframe data unavailable: '+(e.message||e)+'. Main timeframe analysis remains separate.';}
+  finally{mtfBusy=false;}
+}
 function after(){
   const ok=S&&S.candles,C=ok?S.candles:[],prev=D.C.length;
   if(ok){const sec=TF[S.tf].s;D.nc=C[C.length-1].t+sec>Date.now()/1000?C.length-1:C.length;
@@ -342,6 +369,17 @@ function renderTop(){
   $('#chk').innerHTML=dc.checks.map(c=>`<li><span class="${c[0]?'up':'dn'}" aria-label="${c[0]?'pass':'fail'}">${c[0]?'✓':'✕'}</span><span>${esc(c[1])} <span class="mut">· ${esc(c[2])}</span></span></li>`).join('');
   $('#lv').innerHTML=dc.lv?`<b>Reference levels</b> (zone and ATR based): entry ${p2(dc.lv.e)} · stop ${p2(dc.lv.sl)} · target ${p2(dc.lv.tp)} (2R). Levels are on ${esc(f.sym)}, so convert for your broker.`:'';
   const R=D.A&&D.A.rsi[D.nc-1];
+  if(D.A&&D.nc>=30){
+    const swings=D.A.sw.filter(x=>x.i<D.nc);
+    const highs=swings.filter(x=>x.t==='H'),lows=swings.filter(x=>x.t==='L');
+    const hi=highs.length?highs[highs.length-1].p:null,lo=lows.length?lows[lows.length-1].p:null;
+    if(hi!==null&&lo!==null&&hi!==lo){
+      const top=Math.max(hi,lo),bot=Math.min(hi,lo),range=top-bot;
+      const vals=[0,0.236,0.382,0.5,0.618,0.786,1,1.272,1.618,2].map(k=>({k,p:bot+range*k}));
+      $('#fib').innerHTML='<b>Auto Fibonacci</b> (latest confirmed swing range): '+vals.map(x=>x.k.toFixed(3)+' = '+p2(x.p)).join(' · ');
+    }else $('#fib').textContent='Auto Fibonacci: waiting for confirmed swing high and low.';
+  }else $('#fib').textContent='Auto Fibonacci: waiting for candle data.';
+
   if(R!=null){$('#rv').textContent=R.toFixed(1);$('#rv').className='big '+(R>=70?'dn':R<=30?'up':'');
     $('#rs').textContent=R>=70?'Overbought (above 70)':R<=30?'Oversold (below 30)':R>=50?'Neutral, above the 50 midline':'Neutral, below the 50 midline';
     const g=$('#gm');g.hidden=false;g.style.left=R+'%'}else{$('#rv').textContent='—';$('#rs').textContent='Needs at least 15 closed candles';$('#gm').hidden=true}
