@@ -59,7 +59,7 @@ input{width:100%;padding:10px;margin-top:3px}
  </div>
  <div class="g3"><div>Risk : Reward<b id="orr">–</b></div><div>Lot size<b id="olot">–</b></div><div>Risk / Reward<b id="ousd">–</b></div></div>
 </div>
-<p class="mu">Educational demo only, not financial advice. No real trades are placed.</p>
+<p class="mu">Signals are rule-based and conditional, not guaranteed. Price feed is PAXG/USDT gold proxy, not Octa XAUUSD. Verify price, spread and contract size in Octa before any trade. No orders are sent or executed.</p>
 
 <script>
 const $=id=>document.getElementById(id),
@@ -115,19 +115,34 @@ function smc(c){
 
 /* ---------- signal engine (demo rules, score -6..+6) ---------- */
 function signal(c,s,r,rr){
- const x=c[c.length-1].close,A=s.A,why=[];let sc=s.tr*2;
- if(s.tr)why.push(s.tr>0?'Bullish structure (last break up)':'Bearish structure (last break down)');
- const nr=z=>x>=z.lo-A*.25&&x<=z.hi+A*.25,ob=s.ob.filter(nr).pop(),fg=s.fv.filter(nr).pop();
- if(ob){sc+=2*ob.d;why.push((ob.d>0?'Bullish':'Bearish')+' order block at price')}
- if(fg){sc+=fg.d;why.push((fg.d>0?'Bullish':'Bearish')+' FVG at price')}
- if(r<45){sc++;why.push('RSI '+r.toFixed(0)+', room to rise')}
- else if(r>55){sc--;why.push('RSI '+r.toFixed(0)+', room to fall')}
- else why.push('RSI '+r.toFixed(0)+', neutral');
- const d=sc>=3?1:sc<=-3?-1:0,o={d,sc,why};
- if(d){const z=ob&&ob.d==d?ob:null;let sl=z?(d>0?z.lo-A*.3:z.hi+A*.3):x-d*A*1.5;
-  if(Math.abs(x-sl)<A*.5)sl=x-d*A*.5;
-  Object.assign(o,{en:x,sl,tp:x+d*Math.abs(x-sl)*rr})}
- return o}
+ const x=c[c.length-1].close,A=s.A,why=[];
+ const ema=(period)=>{const k=2/(period+1);let v=c[0].close;for(let i=1;i<c.length;i++)v=c[i].close*k+v*(1-k);return v};
+ const fast=ema(20),slow=ema(50),trend=fast>slow?1:fast<slow?-1:0;
+ const nr=z=>x>=z.lo-A*.25&&x<=z.hi+A*.25;
+ const ob=s.ob.filter(nr).pop(),fg=s.fv.filter(nr).pop();
+ let buy=0,sell=0;
+ if(s.tr>0){buy+=2;why.push('Bullish market structure / BOS')}
+ if(s.tr<0){sell+=2;why.push('Bearish market structure / BOS')}
+ if(trend>0){buy++;why.push('EMA 20 above EMA 50')}
+ if(trend<0){sell++;why.push('EMA 20 below EMA 50')}
+ if(ob&&ob.d>0){buy+=2;why.push('Price inside bullish order block')}
+ if(ob&&ob.d<0){sell+=2;why.push('Price inside bearish order block')}
+ if(fg&&fg.d>0){buy++;why.push('Bullish fair value gap nearby')}
+ if(fg&&fg.d<0){sell++;why.push('Bearish fair value gap nearby')}
+ if(r>=50&&r<=68){buy++;why.push('RSI '+r.toFixed(0)+' supports bullish momentum')}
+ if(r<=50&&r>=32){sell++;why.push('RSI '+r.toFixed(0)+' supports bearish momentum')}
+ if(r>68)why.push('RSI overbought: avoid chasing BUY');
+ if(r<32)why.push('RSI oversold: avoid chasing SELL');
+ const d=buy>=5&&buy>sell?1:sell>=5&&sell>buy?-1:0,sc=d>0?buy:d<0?sell:Math.max(buy,sell);
+ const o={d,sc,why};
+ if(d){
+  const z=ob&&ob.d==d?ob:null;
+  let sl=z?(d>0?z.lo-A*.25:z.hi+A*.25):x-d*A*1.5;
+  if(d*(x-sl)<=0||Math.abs(x-sl)<A*.5)sl=x-d*A*1.2;
+  Object.assign(o,{en:x,sl,tp:x+d*Math.abs(x-sl)*rr});
+ }else why.push('No confirmed setup: wait for at least 5 confluence points');
+ return o
+}
 
 /* ---------- overlay: FVG / OB zones and BOS lines ---------- */
 function draw(){
