@@ -24,7 +24,7 @@ export default {
     const tf = url.searchParams.get("tf") || "15m";
     if (!ALLOWED_TF.has(tf)) return json({ error: "Unsupported timeframe", allowed: [...ALLOWED_TF] }, 400);
     const limit = Math.max(30, Math.min(500, Number.parseInt(url.searchParams.get("limit") || "300", 10) || 300));
-    const interval = (tf === "4h" || tf === "1h") ? "60m" : tf;
+    const interval = (tf === "4h" || tf === "1h") ? "60m" : tf === "1w" ? "1wk" : tf;
     const seconds = tf === "5m" ? 300 : tf === "15m" ? 900 : tf === "1h" ? 3600 : tf === "4h" ? 14400 : tf === "1d" ? 86400 : 604800;
     const end = Math.floor(Date.now() / 1000);
     const start = end - Math.ceil(seconds * limit * 1.8);
