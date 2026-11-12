@@ -1,6 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "xauusd-market-feed",
+  "name": "xauusd-ai-bot",
   "main": "cloudflare/worker.js",
-  "compatibility_date": "2026-11-12"
+  "compatibility_date": "2026-11-12",
+  "workers_dev": true,
+  "preview_urls": false
 }
