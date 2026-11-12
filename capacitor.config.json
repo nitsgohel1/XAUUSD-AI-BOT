@@ -1,0 +1,8 @@
+{
+  "appId": "com.nitsgohel1.xauusdai",
+  "appName": "XAUUSD AI Bot",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
