@@ -1,7 +1,7 @@
 // Cloudflare Worker: public read-only market-data proxy for the XAUUSD AI Bot.
 // Source: Yahoo Finance chart endpoint, symbol GC=F (COMEX gold futures reference).
 // This is NOT an Octa XAUUSD spot feed and is not guaranteed real-time.
-const ALLOWED_TF = new Set(["5m", "15m", "1h", "4h"]);
+const ALLOWED_TF = new Set(["5m", "15m", "1h", "4h", "1d", "1w"]);
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -25,7 +25,7 @@ export default {
     if (!ALLOWED_TF.has(tf)) return json({ error: "Unsupported timeframe", allowed: [...ALLOWED_TF] }, 400);
     const limit = Math.max(30, Math.min(500, Number.parseInt(url.searchParams.get("limit") || "300", 10) || 300));
     const interval = (tf === "4h" || tf === "1h") ? "60m" : tf;
-    const seconds = tf === "5m" ? 300 : tf === "15m" ? 900 : tf === "1h" ? 3600 : 14400;
+    const seconds = tf === "5m" ? 300 : tf === "15m" ? 900 : tf === "1h" ? 3600 : tf === "4h" ? 14400 : tf === "1d" ? 86400 : 604800;
     const end = Math.floor(Date.now() / 1000);
     const start = end - Math.ceil(seconds * limit * 1.8);
     const yahoo = new URL("https://query1.finance.yahoo.com/v8/finance/chart/GC=F");
