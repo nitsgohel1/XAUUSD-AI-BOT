@@ -197,6 +197,15 @@ const FEEDS={
   auto:{name:'Free public feeds (auto)',get sym(){return market().label},get host(){return market().kind==='binance'?'data-api.binance.vision':'query1.finance.yahoo.com'},get proxy(){return !!market().proxy},
     fetch:async(tf,n)=>{
       const m=market();
+      // Gold market-data proxy: Yahoo GC=F futures reference, not Octa XAUUSD spot.
+      if(cfg.market==='XAUUSD'){
+        const endpoint='https://xauusd-ai-bot.nitsgohel1.workers.dev/?tf='+encodeURIComponent(tf)+'&limit='+encodeURIComponent(n);
+        const response=await fetch(endpoint,{cache:'no-store'});
+        if(!response.ok)throw Error('Gold Worker HTTP '+response.status);
+        const payload=await response.json();
+        if(!Array.isArray(payload.candles))throw Error(payload.error||'Gold Worker returned no candles');
+        return payload.candles.map(k=>mk(k[0],k[1],k[2],k[3],k[4],k[5]));
+      }
       if(m.kind==='binance'){
         const interval=TF[tf].b;
         const u=`https://data-api.binance.vision/api/v3/klines?symbol=${encodeURIComponent(m.symbol)}&interval=${interval}&limit=${n}`;
